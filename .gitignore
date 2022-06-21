@@ -30,3 +30,10 @@
 *.exe
 *.out
 *.app
+
+build/
+autom4te.cache/
+.*.swp
+.gdb_history
+
+.vscode/

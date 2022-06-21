@@ -1,0 +1,37 @@
+#ifndef _ELF_PARSER_H_
+#define _ELF_PARSER_H_
+
+#include <vector>
+#include <string>
+#include <map>
+
+#include "elf.h"
+
+
+typedef struct {
+	std::string name;
+	uint8_t type;
+	uint8_t bind;
+	uint8_t visibility;
+	uint16_t section_index;
+	uint64_t value;
+	uint64_t size;
+} elf_symbol_t;
+
+
+class elf_data_t {
+	public:
+		elf_data_t(const char *file_path);
+		~elf_data_t();
+		void print_symbols();
+
+	private:
+		int fd;
+		std::vector<Elf64_Shdr> sections;
+		Elf64_Ehdr ehdr;
+		std::map<std::string, elf_symbol_t> symbol_table;
+};
+
+
+
+#endif /* _ELF_PARSER_H_ */
