@@ -5,10 +5,12 @@
 
 parser_hdrs = \
 	elf_parser.h \
+	tag_parser.h \
 	parser.h
 
 parser_srcs = \
-	elf_parser.cc
+	elf_parser.cc \
+	tag_parser.cc
 
 parser_install_prog_srcs = \
 	parser.cc

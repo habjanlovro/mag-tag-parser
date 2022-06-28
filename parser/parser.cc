@@ -5,22 +5,66 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <vector>
+#include <memory>
 
 #include "elf_parser.h"
+#include "tag_parser.h"
+
+
+void out_print_line(const uint64_t addr, const size_t size, const std::string tag) {
+	std::cout << "0x" << std::hex << addr << "," << size << "," << tag << std::endl;
+}
+
+
+void check_stuff(elf_data_t *elf_data, tag_data_t *tag_data) {
+	for (auto &tag_entry : tag_data->getentries()) {
+		try {
+			elf_symbol_t elf_symbol = elf_data->get_symbol_info(tag_entry.symbol);
+			if (tag_entry.type == PTR) {
+				uint64_t addr = elf_data->get_ptr_addr(elf_symbol.value);
+				if (addr > 0) {
+					out_print_line(addr, 1, tag_entry.tag);
+				}
+			}
+			out_print_line(elf_symbol.value, elf_symbol.size, tag_entry.tag);
+		} catch (std::runtime_error& e) {
+			std::cerr << e.what() << std::endl;
+		}
+	}
+}
+
 
 int main(int argc, char *argv[]) {
-	if (argc < 2) {
-		printf("Missing arguments!\n");
-		printf("Usage: %s <elf-file>\n", argv[0]);
+	if (argc < 3) {
+		std::cout << "Missing arguments!" << std::endl;
+		std::cout << "Usage: " << argv[0] << " <elf-file> <tag-file>" << std::endl;
 		return 0;
 	}
 
+	std::unique_ptr<elf_data_t> elf_data;
+	std::unique_ptr<tag_data_t> tag_data;
+
 	try {
-		elf_data_t elf_data(argv[1]);
-		elf_data.print_symbols();
+		elf_data = std::make_unique<elf_data_t>(argv[1]);
+	} catch (std::exception& e) {
+		std::cerr << "exception: " << e.what() << std::endl;
+		exit(1);
 	} catch (...) {
 		std::cerr << "Failed to get ELF data!" << std::endl;
-		return 1;
+		exit(1);
 	}
+
+	try {
+		tag_data = std::make_unique<tag_data_t>(argv[2]);
+	} catch (std::exception& e) {
+		std::cerr << e.what() << std::endl;
+		exit(1);
+	} catch (...) {
+		std::cerr << "Failed to get tag data!" << std::endl;
+		exit(1);
+	}
+
+	check_stuff(elf_data.get(), tag_data.get());
+
 	return 0;
 }

@@ -6,9 +6,20 @@
 #include <cstring>
 #include <fcntl.h>
 #include <exception>
+#include <algorithm>
+
+
+#define PREAD(fd, buff, size, offset) ({ \
+	if (pread((fd), (buff), (size), (offset)) < 0) { \
+		std::cerr << "pread: " << strerror(errno) << std::endl; \
+		close((fd)); \
+		std::abort(); \
+	} \
+})
+
 
 static inline bool elf_check_file(Elf64_Ehdr *hdr) {
-    return hdr &&
+	return hdr &&
 		hdr->e_ident[EI_MAG0] == ELFMAG0 &&
 		hdr->e_ident[EI_MAG1] == ELFMAG1 &&
 		hdr->e_ident[EI_MAG2] == ELFMAG2 &&
@@ -28,49 +39,54 @@ elf_data_t::elf_data_t(const char *file_name) :
 	fd = open(file_name, O_RDONLY);
 	if (fd < 0) {
 		std::cerr << "Unable to open " << file_name << "! Error: " << strerror(errno) << std::endl;
-		throw;
+		throw std::invalid_argument("Unable to open ELF file!");
 	}
 
-	if(pread(fd, &ehdr, sizeof(ehdr), 0) < 0) {
-		std::cerr << "fread: " << strerror(errno) << std::endl;
-		close(fd);
-		throw;
-	}
+	PREAD(fd, &ehdr, sizeof(ehdr), 0);
 
 	if (!elf_check_file(&ehdr) || !elf_is64(&ehdr) || !elf_is_riscv(&ehdr)) {
 		close(fd);
-		throw;
+		throw std::invalid_argument("File is not a 64-bit RISC-V ELF file!");
 	}
 
+	Elf64_Shdr str_shdr;
+	PREAD(fd, &str_shdr, ehdr.e_shentsize, ehdr.e_shoff + ehdr.e_shstrndx * ehdr.e_shentsize);
+
+	char *tbl = (char *) malloc(str_shdr.sh_size);
+	if (tbl == nullptr) {
+		close(fd);
+		std::abort();
+	}
+	PREAD(fd, tbl, str_shdr.sh_size, str_shdr.sh_offset);
+
+	Elf64_Shdr *shdrs = (Elf64_Shdr *) malloc(ehdr.e_shnum * ehdr.e_shentsize);
+	if (shdrs == nullptr) {
+		close(fd);
+		std::abort();
+	}
+	PREAD(fd, shdrs, ehdr.e_shnum * ehdr.e_shentsize, ehdr.e_ehsize + ehdr.e_shoff);
 	for (int i = 0; i < ehdr.e_shnum; i++) {
-		Elf64_Shdr shdr;
-		if (pread(fd, &shdr, ehdr.e_shentsize, sizeof(Elf64_Ehdr) + ehdr.e_shoff + i * sizeof(Elf64_Shdr)) < 0) {
-			std::cerr << "Failed section pread: " << strerror(errno) << std::endl;
-			continue;
-		}
-		sections.push_back(shdr);
+		elf_shdr_t eshdr = {std::string(tbl + shdrs[i].sh_name), shdrs[i]};
+		section_hdrs.push_back(eshdr);
 	}
+	free(tbl);
+	free(shdrs);
 
-	for (auto& shdr : sections) {
-		if (shdr.sh_type == SHT_SYMTAB) {
-			Elf64_Sym *sym_table = (Elf64_Sym *) malloc(shdr.sh_size);
-			if (sym_table == NULL) {
+	for (auto& eshdr : section_hdrs) {
+		if (eshdr.shdr.sh_type == SHT_SYMTAB) {
+			Elf64_Sym *sym_table = (Elf64_Sym *) malloc(eshdr.shdr.sh_size);
+			if (sym_table == nullptr) {
 				close(fd);
-				throw;
+				std::cerr << "Failed to malloc symbol table!" << std::endl;
+				std::abort();
 			}
-			if (pread(fd, sym_table, shdr.sh_size, shdr.sh_offset) < 0) {
-				std::cerr << "Sym table fread: " << strerror(errno) << std::endl;
-				break;
-			}
+			PREAD(fd, sym_table, eshdr.shdr.sh_size, eshdr.shdr.sh_offset);
 
-			Elf64_Shdr linked_section = sections.at(shdr.sh_link - 1);
-			char *str_table = (char *) malloc(linked_section.sh_size);
-			if (pread(fd, str_table, linked_section.sh_size, linked_section.sh_offset) < 0) {
-				std::cerr << "Linked section fread: " << strerror(errno) << std::endl;
-				break;
-			}
+			elf_shdr_t linked_section = section_hdrs.at(eshdr.shdr.sh_link - 1);
+			char *str_table = (char *) malloc(linked_section.shdr.sh_size);
+			PREAD(fd, str_table, linked_section.shdr.sh_size, linked_section.shdr.sh_offset);
 
-			int entries = shdr.sh_size / sizeof(Elf64_Sym);
+			int entries = eshdr.shdr.sh_size / sizeof(Elf64_Sym);
 			for (int i = 0; i < entries; i++) {
 				std::string name(str_table + sym_table[i].st_name);
 				elf_symbol_t symbol = {name, ELF64_ST_TYPE(sym_table[i].st_info),
@@ -80,7 +96,8 @@ elf_data_t::elf_data_t(const char *file_name) :
 				symbol_table[name] = symbol;
 			}
 
-			break;
+			free(str_table);
+			free(sym_table);
 		}
 	}
 }
@@ -95,6 +112,32 @@ elf_data_t::~elf_data_t() {
 
 void elf_data_t::print_symbols() {
 	for (auto & symbol : symbol_table) {
-		std::cout << symbol.first << std::endl;
+		std::cout << symbol.first << " value: " << std::hex << symbol.second.value << std::endl;
 	}
+}
+
+
+elf_symbol_t elf_data_t::get_symbol_info(std::string name) {
+	auto search = symbol_table.find(name);
+	if (search == symbol_table.end()) {
+		throw std::runtime_error("Symbol '" + name + "' dosen't exist in ELF file!");
+	}
+	return search->second;
+}
+
+
+uint64_t elf_data_t::get_ptr_addr(uint64_t ptr) {
+	uint64_t r = 0;
+
+	for (auto& eshdr : section_hdrs) {
+		// data section
+		if (eshdr.shdr.sh_type == SHT_PROGBITS && eshdr.shdr.sh_flags == (SHF_WRITE | SHF_ALLOC)) {
+			if (ptr > eshdr.shdr.sh_addr && ptr < eshdr.shdr.sh_addr + eshdr.shdr.sh_size) {
+				PREAD(fd, &r, sizeof(uint64_t), eshdr.shdr.sh_offset + (ptr - eshdr.shdr.sh_addr));
+				break;
+			}
+		}
+	}
+
+	return r;
 }

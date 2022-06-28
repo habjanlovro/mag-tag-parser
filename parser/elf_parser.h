@@ -18,16 +18,23 @@ typedef struct {
 	uint64_t size;
 } elf_symbol_t;
 
+typedef struct {
+	std::string name;
+	Elf64_Shdr shdr;
+} elf_shdr_t;
+
 
 class elf_data_t {
 	public:
 		elf_data_t(const char *file_path);
 		~elf_data_t();
 		void print_symbols();
+		elf_symbol_t get_symbol_info(std::string name);
+		uint64_t get_ptr_addr(uint64_t ptr);
 
 	private:
 		int fd;
-		std::vector<Elf64_Shdr> sections;
+		std::vector<elf_shdr_t> section_hdrs;
 		Elf64_Ehdr ehdr;
 		std::map<std::string, elf_symbol_t> symbol_table;
 };
