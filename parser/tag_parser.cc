@@ -8,6 +8,12 @@
 tag_data_t::tag_data_t(const char *file_path) {
 	std::ifstream infile(file_path);
 
+	if (!infile.is_open()) {
+		std::ostringstream oss;
+		oss << "Couldn't open tag file: '" << file_path << "'!";
+		throw std::invalid_argument(oss.str());
+	}
+
 	std::string line;
 	int line_num = 1;
 	while (std::getline(infile, line)) {

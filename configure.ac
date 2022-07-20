@@ -80,6 +80,7 @@ AC_HEADER_STDC
 # The '*' suffix indicates an optional subproject. The '**' suffix
 # indicates an optional subproject which is also the name of a group.
 
+MCPPBS_INCLUDE_INTERNAL([policy])
 MCPPBS_INCLUDE_INTERNAL([parser])
 
 #-------------------------------------------------------------------------

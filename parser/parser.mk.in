@@ -3,6 +3,9 @@
  parser_ldflags   = @parser_ldflags@
  parser_libs      = @parser_libs@
 
+parser_subproject_deps = \
+	policy \
+
 parser_hdrs = \
 	elf_parser.h \
 	tag_parser.h \

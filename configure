@@ -595,6 +595,14 @@ parser_libs
 parser_ldflags
 parser_cppflags
 parser_intdeps
+policy_extra_libs
+policy_extra_ldflags
+policy_extra_cppflags
+policy_pkcdeps
+policy_libs
+policy_ldflags
+policy_cppflags
+policy_intdeps
 EGREP
 GREP
 CXXCPP
@@ -3909,6 +3917,225 @@ fi
 
   # Set the type of this subproject and add it to a shell and m4 list
 
+  policy_type="internal"
+  as_fn_append mcppbs_include_internal "policy "
+
+
+  # Optional subprojects add an --with-subproject command line options,
+  # while default subprojects just make sure the shell enabled variable
+  # is set to "yes" so we always configure this subproject.
+
+
+    with_policy="yes"
+
+
+  # We create a shell function which contains all the code to actually
+  # configure this project including adding it to the
+  # $mcppbs_include_internal_en running shell variable, setting an
+  # HAVE_SUBPROJECT C define, and actually processing the appropriate
+  # subproject.ac. This will allow us to easily configure optional
+  # subproject later by just executing this function.
+
+  policy_cfg ()
+  {
+    ac_config_headers="$ac_config_headers policy-config.h:config.h.in"
+
+    ac_config_files="$ac_config_files policy.mk:policy/policy.mk.in"
+
+
+$as_echo "#define HAVE_POLICY /**/" >>confdefs.h
+
+    as_fn_append mcppbs_include_internal_en "policy "
+    with_policy="yes"
+
+  # Verify that the subproject name give in the configure.ac matches the
+  # name give in the autoconf fragment.
+
+
+
+
+
+
+  # Save the list of direct dependencies (ie dirdeps) and a list of
+  # dependencies which are comma separated for pkg-config file.
+
+  policy_dirdeps=""
+  policy_pkcdeps=""
+
+  # Initialize this subproject's compiler and linker flags
+
+  policy_cppflags="-I${srcdir}/policy "
+  policy_libs="-lpolicy "
+
+  # Loop through the list of given subprojects and for each one see if
+  # it has already been configured. If no then configure it by calling
+  # the appropriate shell function created in MCPPBS_SUBPROJECT. This
+  # will recursively configure transitively dependent subprojects.
+  # Eventually maybe this should happen at configure run time as opposed
+  # to autoconf run time.
+
+
+
+  # Make the dependency list, cppflags, ldflags, and libs variable unique
+  # by eliminating redundant tokens in the full lists.
+
+
+  # Reverse the order of the input
+  policy_intdeps_rev=""
+  for input_token in ${policy_intdeps}; do
+    policy_intdeps_rev="${input_token} ${policy_intdeps_rev}"
+  done
+
+  # Step through each input token (now in reverse order)
+  policy_intdeps=""
+  for input_token in ${policy_intdeps_rev}; do
+
+    # See if input token is in output token list
+    token_found="no"
+    for output_token in ${policy_intdeps}; do
+      if ( test "${input_token}" = "${output_token}" ); then
+        token_found="yes"
+      fi
+    done
+
+    # If this is the first time we have seen token push it onto list
+    if ( test "${token_found}" = "no" ); then
+      policy_intdeps="${input_token} ${policy_intdeps}"
+    fi
+  done
+
+
+  # Reverse the order of the input
+  policy_cppflags_rev=""
+  for input_token in ${policy_cppflags}; do
+    policy_cppflags_rev="${input_token} ${policy_cppflags_rev}"
+  done
+
+  # Step through each input token (now in reverse order)
+  policy_cppflags=""
+  for input_token in ${policy_cppflags_rev}; do
+
+    # See if input token is in output token list
+    token_found="no"
+    for output_token in ${policy_cppflags}; do
+      if ( test "${input_token}" = "${output_token}" ); then
+        token_found="yes"
+      fi
+    done
+
+    # If this is the first time we have seen token push it onto list
+    if ( test "${token_found}" = "no" ); then
+      policy_cppflags="${input_token} ${policy_cppflags}"
+    fi
+  done
+
+
+  # Reverse the order of the input
+  policy_ldflags_rev=""
+  for input_token in ${policy_ldflags}; do
+    policy_ldflags_rev="${input_token} ${policy_ldflags_rev}"
+  done
+
+  # Step through each input token (now in reverse order)
+  policy_ldflags=""
+  for input_token in ${policy_ldflags_rev}; do
+
+    # See if input token is in output token list
+    token_found="no"
+    for output_token in ${policy_ldflags}; do
+      if ( test "${input_token}" = "${output_token}" ); then
+        token_found="yes"
+      fi
+    done
+
+    # If this is the first time we have seen token push it onto list
+    if ( test "${token_found}" = "no" ); then
+      policy_ldflags="${input_token} ${policy_ldflags}"
+    fi
+  done
+
+
+  # Reverse the order of the input
+  policy_libs_rev=""
+  for input_token in ${policy_libs}; do
+    policy_libs_rev="${input_token} ${policy_libs_rev}"
+  done
+
+  # Step through each input token (now in reverse order)
+  policy_libs=""
+  for input_token in ${policy_libs_rev}; do
+
+    # See if input token is in output token list
+    token_found="no"
+    for output_token in ${policy_libs}; do
+      if ( test "${input_token}" = "${output_token}" ); then
+        token_found="yes"
+      fi
+    done
+
+    # If this is the first time we have seen token push it onto list
+    if ( test "${token_found}" = "no" ); then
+      policy_libs="${input_token} ${policy_libs}"
+    fi
+  done
+
+
+  # Keep a copy of the compiler and linker flags as they are now,
+  # because if we want to install this project we don't really need to
+  # include these flags in the pkg-config file. We do of course need to
+  # keep the flags that a user might add later in their subproject.ac.
+
+  policy_base_cppflags=${policy_cppflags}
+  policy_base_ldflags=${policy_ldflags}
+  policy_base_libs=${policy_libs}
+
+  # Substitute variables for makefile
+
+
+
+
+
+
+  # Substitute variables for pkg-config files (these will be set in the
+  # MCPPBS_INSTALL_LIBS macro)
+
+
+
+
+
+
+  # Display that we are now configuring this subproject (ie running the
+  # rest of the macros in the corresponding subproject.ac)
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: configuring internal subproject policy" >&5
+$as_echo "$as_me: configuring internal subproject policy" >&6;}
+
+
+
+  };
+
+  # See if we should actually configure this subproject and if so then
+  # call the shell function we just created.
+
+  if     test "${with_optional_subprojects}" = "yes" \
+          || test "${with_policy}" = "yes"  ; then :
+
+    eval "policy_cfg"
+
+fi
+
+
+
+  # Determine if this is a required or an optional subproject and create
+  # a m4 variable for his subproject name with and without dashes.
+
+
+
+
+
+
+  # Set the type of this subproject and add it to a shell and m4 list
+
   parser_type="internal"
   as_fn_append mcppbs_include_internal "parser "
 
@@ -3951,8 +4178,8 @@ $as_echo "#define HAVE_PARSER /**/" >>confdefs.h
   # Save the list of direct dependencies (ie dirdeps) and a list of
   # dependencies which are comma separated for pkg-config file.
 
-  parser_dirdeps=""
-  parser_pkcdeps=""
+  parser_dirdeps="policy"
+  parser_pkcdeps="policy"
 
   # Initialize this subproject's compiler and linker flags
 
@@ -3966,6 +4193,55 @@ $as_echo "#define HAVE_PARSER /**/" >>confdefs.h
   # Eventually maybe this should happen at configure run time as opposed
   # to autoconf run time.
 
+
+    # Determine if this dependency is required or optional
+
+
+
+    # Create some names which characterize this dependency including a
+    # shell variable indicating if this subproject has been configured,
+    # the function name to call if we need to configure this dependency,
+    # and a shell variable which has this dependency's dependencies.
+
+
+
+
+
+    # If the dependency is required and has not been configured then
+    # configure it. Issue error if subproject does not exist.
+
+
+
+
+      if  test "${with_policy}" = "no" ; then :
+
+        eval "policy_cfg"
+
+fi
+
+
+    # Add information about this dependency to our running lists
+
+    if  test "${with_policy}" = "yes" ; then :
+
+      # Add the actual dependency to our libs list and our intdeps list
+      # which are both ordered such that libs only depend on later libs
+
+      as_fn_append parser_libs "-lpolicy "
+      if  test "${policy_type}" = "internal" ; then :
+
+        as_fn_append parser_intdeps "policy "
+
+fi
+
+      # Add dependency's variables to our own
+
+      as_fn_append parser_intdeps "${policy_intdeps} "
+      as_fn_append parser_cppflags "${policy_cppflags} "
+      as_fn_append parser_ldflags "${policy_ldflags} "
+      as_fn_append parser_libs "${policy_libs} "
+
+fi
 
 
   # Make the dependency list, cppflags, ldflags, and libs variable unique
@@ -4817,6 +5093,8 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
+    "policy-config.h") CONFIG_HEADERS="$CONFIG_HEADERS policy-config.h:config.h.in" ;;
+    "policy.mk") CONFIG_FILES="$CONFIG_FILES policy.mk:policy/policy.mk.in" ;;
     "parser-config.h") CONFIG_HEADERS="$CONFIG_HEADERS parser-config.h:config.h.in" ;;
     "parser.mk") CONFIG_FILES="$CONFIG_FILES parser.mk:parser/parser.mk.in" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;

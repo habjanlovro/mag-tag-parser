@@ -3,6 +3,9 @@
 /* Define if we should include subproject parser */
 #undef HAVE_PARSER
 
+/* Define if we should include subproject policy */
+#undef HAVE_POLICY
+
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
 

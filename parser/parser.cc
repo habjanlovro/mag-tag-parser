@@ -10,6 +10,9 @@
 #include "elf_parser.h"
 #include "tag_parser.h"
 
+#include "policy.h"
+#include "lexer.h"
+
 
 void out_print_line(const uint64_t addr, const size_t size, const std::string tag) {
 	std::cout << "0x" << std::hex << addr << "," << size << "," << tag << std::endl;
@@ -35,13 +38,12 @@ void check_stuff(elf_data_t *elf_data, tag_data_t *tag_data) {
 
 
 int main(int argc, char *argv[]) {
-	if (argc < 3) {
+	if (argc < 4) {
 		std::cout << "Missing arguments!" << std::endl;
-		std::cout << "Usage: " << argv[0] << " <elf-file> <tag-file>" << std::endl;
+		std::cout << "Usage: " << argv[0] << " <elf-file> <tag-file> <policy-file>" << std::endl;
 		return 0;
 	}
 
-	std::unique_ptr<elf_data_t> elf_data;
 	std::unique_ptr<tag_data_t> tag_data;
 
 	try {

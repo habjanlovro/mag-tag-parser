@@ -1,0 +1,10 @@
+ policy_intdeps   = @policy_intdeps@
+ policy_cppflags  = @policy_cppflags@
+ policy_ldflags   = @policy_ldflags@
+ policy_libs      = @policy_libs@
+
+policy_hdrs = \
+	lexer.h \
+
+policy_srcs = \
+	lexer.cc \
