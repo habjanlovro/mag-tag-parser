@@ -8,6 +8,10 @@
 enum Term {
 	LBRACE,
 	RBRACE,
+	LPAREN,
+	RPAREN,
+	PLUS,
+	MULT,
 	COLON,
 	COMMA,
 	ARROW,
@@ -17,6 +21,7 @@ enum Term {
 	TOPOLOGY,
 	PG,
 	IDENTIFIER,
+	EOF
 };
 
 struct symbol_t {

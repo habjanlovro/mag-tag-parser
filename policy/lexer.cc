@@ -33,14 +33,28 @@ std::vector<symbol_t> lexify(const char *file_path) {
 				column = 0;
 			}
 			continue;
+		} else if (c == '#') {
+			do {
+				infile.get(c);
+			} while (c != '\n');
+			line++;
+			column = 0;
 		} else if (c == '{') {
 			symbols.push_back({ Term::LBRACE, "{", line, column });
 		} else if (c == '}') {
 			symbols.push_back({ Term::RBRACE, "}", line, column });
+		} else if (c == '(') {
+			symbols.push_back({ Term::LPAREN, "(", line, column });
+		} else if (c == ')') {
+			symbols.push_back({ Term::RPAREN, ")", line, column });
 		} else if (c == ':') {
 			symbols.push_back({ Term::COLON, ":", line, column });
 		} else if (c == ',') {
 			symbols.push_back({ Term::COMMA, ",", line, column });
+		} else if (c == '+') {
+			symbols.push_back({ Term::PLUS, "+", line, column });
+		} else if (c == '*') {
+			symbols.push_back({ Term::MULT, "*", line, column });
 		} else if (c == '-') {
 			infile.get(c);
 			column++;
@@ -85,6 +99,8 @@ std::vector<symbol_t> lexify(const char *file_path) {
 			throw std::runtime_error(oss.str());
 		}
 	}
+
+	symbols.push_back({ Term::EOF, "$", line, column });
 
 	for (auto & s : symbols) {
 		std::cout << s.name << " loc: " << s.line << ", " << s.column << std::endl;
