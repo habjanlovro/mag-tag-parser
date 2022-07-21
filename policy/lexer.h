@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-enum Term {
+enum class Term {
 	LBRACE,
 	RBRACE,
 	LPAREN,
@@ -21,7 +21,7 @@ enum Term {
 	TOPOLOGY,
 	PG,
 	IDENTIFIER,
-	EOF
+	END
 };
 
 struct symbol_t {

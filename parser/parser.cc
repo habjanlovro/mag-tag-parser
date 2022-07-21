@@ -11,7 +11,6 @@
 #include "tag_parser.h"
 
 #include "policy.h"
-#include "lexer.h"
 
 
 void out_print_line(const uint64_t addr, const size_t size, const std::string tag) {
@@ -45,6 +44,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	std::unique_ptr<tag_data_t> tag_data;
+	handle_policy(argv[3]);
 
 	try {
 		elf_data = std::make_unique<elf_data_t>(argv[1]);
