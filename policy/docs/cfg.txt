@@ -1,0 +1,44 @@
+# Context free grammar for the policy files. Use the following website
+# to check for corectness: http://mdaines.github.io/grammophone/#
+
+SOURCE -> DECLS .
+
+DECLS -> DECL DECLREST .
+
+DECLREST -> DECL DECLREST .
+DECLREST -> .
+
+DECL -> TOPOLOGY .
+
+TOPOLOGY -> topology id colon TOPOLOGYREST .
+
+TOPOLOGYREST -> basic { BASIC } .
+TOPOLOGYREST -> linear LIN .
+TOPOLOGYREST -> expr  EXPR  .
+
+BASIC -> EDGE EDGEREST .
+
+EDGE -> id arrow id .
+
+EDGEREST -> comma EDGE EDGEREST .
+EDGEREST -> .
+
+LIN -> id LINREST .
+
+LINREST -> comma LIN .
+LINREST -> .
+
+EXPR -> SUM .
+
+SUM -> MUL SUM' .
+
+SUM' -> + MUL SUM' .
+SUM' -> .
+
+MUL -> ELEM MUL' .
+
+MUL' -> * ELEM MUL' .
+MUL' -> .
+
+ELEM -> id .
+ELEM -> ( SUM ) .

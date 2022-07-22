@@ -25,8 +25,8 @@ static dertree_t parse_elem(std::vector<symbol_t>& symbols);
 
 static inline std::string error_msg(const symbol_t &s, const std::string expected);
 
-static inline symbol_t& peek(std::vector<symbol_t>& symbols, std::string err);
-static inline symbol_t& consume(std::vector<symbol_t>& symbols, std::string err);
+static inline symbol_t& peek(std::vector<symbol_t>& symbols, const std::string err);
+static inline symbol_t& consume(std::vector<symbol_t>& symbols, const std::string err);
 
 
 size_t symbol_index = 0;
@@ -63,7 +63,8 @@ static dertree_t parse_declrest(std::vector<symbol_t>& symbols) {
 		case Term::END:
 			break;
 		case Term::TOPOLOGY:
-			t.subtrees.push_back(parse_decls(symbols));
+			t.subtrees.push_back(parse_decl(symbols));
+			t.subtrees.push_back(parse_declrest(symbols));
 			break;
 		default:
 			throw std::runtime_error(error_msg(s, "declarations"));
@@ -172,7 +173,8 @@ static dertree_t parse_edge_rest(std::vector<symbol_t>& symbols) {
 		case Term::COMMA:
 			t.leaves.push_back(s);
 			consume(symbols, "Missing a ','!");
-			t.subtrees.push_back(parse_basic(symbols));
+			t.subtrees.push_back(parse_edge(symbols));
+			t.subtrees.push_back(parse_edge_rest(symbols));
 			break;
 		default:
 			throw std::runtime_error(error_msg(s, "',' or '}'"));
@@ -258,7 +260,8 @@ static dertree_t parse_sum_rest(std::vector<symbol_t>& symbols) {
 		case Term::PLUS:
 			t.leaves.push_back(s);
 			consume(symbols, "Missing a '+'!");
-			t.subtrees.push_back(parse_sum(symbols));
+			t.subtrees.push_back(parse_mul(symbols));
+			t.subtrees.push_back(parse_sum_rest(symbols));
 			break;
 		default:
 			throw std::runtime_error(error_msg(s, " end of expression or '+'"));
@@ -296,7 +299,8 @@ static dertree_t parse_mul_rest(std::vector<symbol_t>& symbols) {
 		case Term::MULT:
 			t.leaves.push_back(s);
 			consume(symbols, "Missing a '*'");
-			t.subtrees.push_back(parse_mul(symbols));
+			t.subtrees.push_back(parse_elem(symbols));
+			t.subtrees.push_back(parse_mul_rest(symbols));
 			break;
 		default:
 			throw std::runtime_error(error_msg(s, " end of expression or '*'"));
@@ -314,7 +318,7 @@ static dertree_t parse_elem(std::vector<symbol_t>& symbols) {
 			break;
 		case Term::LPAREN:
 			t.leaves.push_back(s);
-			t.subtrees.push_back(parse_expr(symbols));
+			t.subtrees.push_back(parse_sum(symbols));
 			s = consume(symbols, "Missing ')'!");
 			t.leaves.push_back(s);
 			break;
@@ -331,7 +335,7 @@ static inline std::string error_msg(const symbol_t &s, const std::string expecte
 	return oss.str();
 }
 
-static inline symbol_t& peek(std::vector<symbol_t>& symbols, std::string err) {
+static inline symbol_t& peek(std::vector<symbol_t>& symbols, const std::string err) {
 	try {
 		return symbols.at(symbol_index);
 	} catch (std::out_of_range& e) {
@@ -339,7 +343,7 @@ static inline symbol_t& peek(std::vector<symbol_t>& symbols, std::string err) {
 	}
 }
 
-static inline symbol_t& consume(std::vector<symbol_t>& symbols, std::string err) {
+static inline symbol_t& consume(std::vector<symbol_t>& symbols, const std::string err) {
 	try {
 		symbol_index++;
 		return symbols.at(symbol_index - 1);

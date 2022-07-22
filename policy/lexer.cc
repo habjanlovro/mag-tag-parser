@@ -102,10 +102,6 @@ std::vector<symbol_t> lexify(const char *file_path) {
 
 	symbols.push_back({ Term::END, "end of file", line, column });
 
-	for (auto & s : symbols) {
-		std::cout << s.name << " loc: " << s.line << ", " << s.column << std::endl;
-	}
-
 	return symbols;
 }
 
