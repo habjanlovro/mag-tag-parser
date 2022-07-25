@@ -43,8 +43,18 @@ int main(int argc, char *argv[]) {
 		return 0;
 	}
 
+	std::unique_ptr<policy_t> policy;
+
+	try {
+		policy = std::make_unique<policy_t>(argv[3]);
+	} catch (std::runtime_error& err) {
+		std::cout << err.what() << std::endl;
+	} catch (...) {
+		std::cout << "Failed policy!" << std::endl;
+	}
+
+	std::unique_ptr<elf_data_t> elf_data;
 	std::unique_ptr<tag_data_t> tag_data;
-	handle_policy(argv[3]);
 
 	try {
 		elf_data = std::make_unique<elf_data_t>(argv[1]);
