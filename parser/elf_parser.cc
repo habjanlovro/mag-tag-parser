@@ -59,18 +59,13 @@ elf_data_t::elf_data_t(const char *file_name) :
 	}
 	PREAD(fd, tbl, str_shdr.sh_size, str_shdr.sh_offset);
 
-	Elf64_Shdr *shdrs = (Elf64_Shdr *) malloc(ehdr.e_shnum * ehdr.e_shentsize);
-	if (shdrs == nullptr) {
-		close(fd);
-		std::abort();
-	}
-	PREAD(fd, shdrs, ehdr.e_shnum * ehdr.e_shentsize, ehdr.e_ehsize + ehdr.e_shoff);
-	for (int i = 0; i < ehdr.e_shnum; i++) {
-		elf_shdr_t eshdr = {std::string(tbl + shdrs[i].sh_name), shdrs[i]};
+	for (size_t i = 0; i < ehdr.e_shnum; i++) {
+		Elf64_Shdr shdr;
+		PREAD(fd, &shdr, ehdr.e_shentsize, ehdr.e_ehsize + ehdr.e_shoff + i * ehdr.e_shentsize);
+		elf_shdr_t eshdr = { std::string(tbl + shdr.sh_name), shdr };
 		section_hdrs.push_back(eshdr);
 	}
 	free(tbl);
-	free(shdrs);
 
 	for (auto& eshdr : section_hdrs) {
 		if (eshdr.shdr.sh_type == SHT_SYMTAB) {
