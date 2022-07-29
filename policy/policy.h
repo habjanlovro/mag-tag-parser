@@ -89,6 +89,9 @@ class policy_t {
 	public:
 		policy_t() {}
 		policy_t(const char *file_path);
+		bool contains_tag(const std::string& tag) const {
+			return tags.find(tag) != tags.end();
+		}
 	private:
 		std::map<std::string, std::shared_ptr<topology_t>> topologies;
 		std::set<std::string> tags;

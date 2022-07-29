@@ -5,7 +5,12 @@
 #include <sstream>
 
 
-tag_data_t::tag_data_t(const char *file_path) {
+static std::string get_type(std::istringstream& iss);
+static std::string get_symbol(std::istringstream& iss);
+static std::string get_tag(std::istringstream& iss);
+
+
+tag_data_t::tag_data_t(const char *file_path, const policy_t& policy) {
 	std::ifstream infile(file_path);
 
 	if (!infile.is_open()) {
@@ -21,25 +26,88 @@ tag_data_t::tag_data_t(const char *file_path) {
 			continue;
 		}
 		std::istringstream iss(line);
-		std::string type, symbol, colon, tag;
-    	if (!(iss >> type >> symbol >> colon >> tag)) {
-			throw std::invalid_argument("Line " + std::to_string(line_num) + ": Wrong syntax!");
-		}
-		if (colon != ":") {
-			throw std::invalid_argument("Line " + std::to_string(line_num) + ": Wrong syntax - no colon!");;
-		}
-		enum tag_type ttype;
-		if (type == "atom") {
-			ttype = ATOM;
-		} else if (type == "ptr") {
-			ttype = PTR;
-		} else {
-			throw std::invalid_argument("Line " + std::to_string(line_num) + ": Wrong syntax - tag type must be 'atom' or 'ptr'!");
-		}
+		try {
 
-		tag_struct_t tag_data = { ttype, symbol, tag };
-		entries.push_back(tag_data);
-
+			std::string type = get_type(iss);
+			std::string symbol = get_symbol(iss);
+			std::string tag = get_tag(iss);
+			std::cout << type << " " << symbol << " : " << tag << std::endl;
+			Tag_type ttype = (type == "atom") ? Tag_type::ATOM : Tag_type::PTR;
+			if (policy.contains_tag(tag)) {
+				tag_struct_t tag_data = { ttype, symbol, tag };
+				entries.push_back(tag_data);
+			} else {
+				std::cerr << "Tag '" << tag << "' is not in the specified policy!"
+					<< std::endl;
+			}
+		} catch (std::runtime_error& err) {
+			std::ostringstream oss;
+			oss << "Line " << line_num << ": Wrong syntax! " << err.what();
+			throw std::invalid_argument(oss.str());
+		}
 		line_num++;
 	}
+}
+
+static std::string get_type(std::istringstream& iss) {
+	std::string r;
+	char c;
+	while (iss.get(c)) {
+		if (c == ' ') {
+			break;
+		}
+		r += c;
+	}
+	if (r == "ptr" || r == "atom") {
+		return r;
+	}
+	throw std::runtime_error("Only 'ptr' or 'atom' keywords allowed!");
+}
+
+static std::string get_symbol(std::istringstream& iss) {
+	std::string r;
+	char c;
+	bool colon = false;
+	while (iss.get(c)) {
+		if (c == ':') {
+			colon = true;
+			break;
+		} else if (c == ' ') {
+			break;
+		}
+		r += c;
+	}
+	if (!colon) {
+		do {
+			iss.get(c);
+		} while (c != ':' && !iss.eof());
+	}
+	if (iss.eof()) {
+		throw std::runtime_error("Missing colon or tag!");
+	}
+	return r;
+}
+
+static std::string get_tag(std::istringstream& iss) {
+	std::string r;
+	char c;
+	do {
+		iss.get(c);
+	} while (c == ' ' && !iss.eof());
+	do {
+		r += c;
+		iss.get(c);
+	} while (!iss.eof());
+
+	std::string::iterator string_end;
+	for (auto p = r.begin(); p != r.end(); p++) {
+		if (*p != ' ') {
+			string_end = p;
+		}
+	}
+	if (string_end != r.end()) {
+		string_end++;
+	}
+	r.erase(string_end, r.end());
+	return r;
 }

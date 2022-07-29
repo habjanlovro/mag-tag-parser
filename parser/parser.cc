@@ -22,7 +22,7 @@ void check_stuff(elf_data_t *elf_data, tag_data_t *tag_data) {
 	for (auto &tag_entry : tag_data->getentries()) {
 		try {
 			elf_symbol_t elf_symbol = elf_data->get_symbol_info(tag_entry.symbol);
-			if (tag_entry.type == PTR) {
+			if (tag_entry.type == Tag_type::PTR) {
 				uint64_t addr = elf_data->get_ptr_addr(elf_symbol.value);
 				if (addr > 0) {
 					out_print_line(addr, 1, tag_entry.tag);
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	try {
-		tag_data = std::make_unique<tag_data_t>(argv[2]);
+		tag_data = std::make_unique<tag_data_t>(argv[2], *policy);
 	} catch (std::exception& e) {
 		std::cerr << e.what() << std::endl;
 		exit(1);

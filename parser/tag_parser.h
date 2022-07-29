@@ -4,15 +4,16 @@
 #include <string>
 #include <vector>
 
+#include "policy.h"
 
-enum tag_type {
+enum class Tag_type {
 	ATOM,
 	PTR
 };
 
 
 typedef struct {
-	enum tag_type type;
+	Tag_type type;
 	std::string symbol;
 	std::string tag;
 } tag_struct_t;
@@ -20,7 +21,7 @@ typedef struct {
 
 class tag_data_t {
 	public:
-		tag_data_t(const char *file_name);
+		tag_data_t(const char *file_name, const policy_t& policy);
 		~tag_data_t() {}
 		const std::vector<tag_struct_t>& getentries() const { return entries; }
 	private:
