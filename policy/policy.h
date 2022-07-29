@@ -25,14 +25,6 @@ class topology_t {
 		std::string name;
 };
 
-class policy_t {
-	public:
-		policy_t() {}
-		policy_t(const char *file_path);
-	private:
-		std::map<std::string, std::shared_ptr<topology_t>> topologies;
-		std::set<std::string> tags;
-};
 
 class topology_linear_t : public topology_t {
 	public:
@@ -87,9 +79,21 @@ class topology_basic_t : public topology_t {
 			const std::shared_ptr<topology_basic_t>& t1,
 			const std::shared_ptr<topology_basic_t>& t2);
 		void print();
+		void set_name_prefix(const std::string& prefix);
 	private:
 		std::vector<std::vector<uint8_t>> mvertices;
 		std::map<std::string, int> toindex;
 };
+
+class policy_t {
+	public:
+		policy_t() {}
+		policy_t(const char *file_path);
+	private:
+		std::map<std::string, std::shared_ptr<topology_t>> topologies;
+		std::set<std::string> tags;
+		std::shared_ptr<topology_basic_t> topology;
+};
+
 
 #endif

@@ -28,21 +28,22 @@ policy_t::policy_t(const char *file_path) {
 	topologies = get_simple_topologies(ast);
 	topologies = add_expr_topologies(ast, topologies);
 
+	topology = std::make_shared<topology_basic_t>("Total");
+
 	for (auto& tuple : topologies) {
 		if (auto t = std::dynamic_pointer_cast<topology_basic_t>(tuple.second)) {
 			for (auto& m : t->index_mapping()) {
 				tags.insert(m.first);
 			}
+			topology->disjoint_union(topology, t);
 		}
 		if (auto t = std::dynamic_pointer_cast<topology_linear_t>(tuple.second)) {
 			for (auto &s : t->get_tags()) {
 				tags.insert(s);
 			}
+			auto converted = std::make_shared<topology_basic_t>(*t);
+			topology->disjoint_union(topology, converted);
 		}
-		tuple.second->print();
-	}
-	for (auto& t : tags) {
-		std::cout << t << std::endl;
 	}
 }
 
@@ -97,6 +98,7 @@ static std::map<std::string, std::shared_ptr<topology_t>>& add_expr_topologies(
 				}
 				auto topology = std::make_shared<topology_basic_t>(t->get_name());
 				topology = construct_expr_topology(t->get_expr(), topologies, topology);
+				topology->set_name_prefix(t->get_name());
 				topologies[t->get_name()] = topology;
 			}
 		}
@@ -291,4 +293,13 @@ void topology_basic_t::disjoint_union(
 	}
 	mvertices.clear();
 	mvertices = r;
+}
+
+void topology_basic_t::set_name_prefix(const std::string& prefix) {
+	std::map<std::string, int> updated;
+	for (auto& t : toindex) {
+		updated[prefix + "." + t.first] = t.second;
+	}
+	toindex.clear();
+	toindex = updated;
 }
