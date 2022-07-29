@@ -36,7 +36,7 @@ std::vector<symbol_t> lexify(const char *file_path) {
 		} else if (c == '#') {
 			do {
 				infile.get(c);
-			} while (c != '\n');
+			} while ((c != '\n') && !infile.eof());
 			line++;
 			column = 0;
 		} else if (c == '{') {
@@ -75,7 +75,7 @@ std::vector<symbol_t> lexify(const char *file_path) {
 				s += c;
 				infile.get(c);
 				column++;
-			} while (!is_whitespace(c) && is_identifier(c));
+			} while (!is_whitespace(c) && is_identifier(c) && !infile.eof());
 			infile.unget();
 			column--;
 
