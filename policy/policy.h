@@ -18,9 +18,7 @@ class topology_t {
 		virtual void print() {
 			std::cout << name << std::endl;
 		}
-		virtual std::string fullname(const std::string& tag) {
-			return name + "." + tag;
-		}
+		virtual std::string fullname(const std::string& tag);
 	protected:
 		std::string name;
 };
@@ -89,9 +87,7 @@ class policy_t {
 	public:
 		policy_t() {}
 		policy_t(const char *file_path);
-		bool contains_tag(const std::string& tag) const {
-			return tags.find(tag) != tags.end();
-		}
+		bool contains_tag(const std::string& tag) const;
 	private:
 		std::map<std::string, std::shared_ptr<topology_t>> topologies;
 		std::set<std::string> tags;

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <algorithm>
 
 
 static std::map<std::string, std::shared_ptr<topology_t>> get_simple_topologies(const std::shared_ptr<ast_node_t>& ast);
@@ -17,6 +18,7 @@ static std::shared_ptr<topology_basic_t> construct_expr_topology(
 		std::shared_ptr<ast_expr_t>& expr,
 		std::map<std::string, std::shared_ptr<topology_t>>& topologies,
 		std::shared_ptr<topology_basic_t>& arg);
+static inline std::string remove_space(const std::string& s);
 
 
 policy_t::policy_t(const char *file_path) {
@@ -177,7 +179,7 @@ topology_basic_t::topology_basic_t(topology_linear_t& t) {
 		if (i + 1 < mvertices.size()) {
 			mvertices[i][i + 1] = 1;
 		}
-		toindex[t.get_tags().at(i)] = i;
+		toindex[remove_space(t.get_tags().at(i))] = i;
 	}
 }
 
@@ -214,7 +216,7 @@ void topology_basic_t::carthesian_product(
 	for (auto& tuple_a : mapping_a) {
 		for (auto& tuple_b : mapping_b) {
 			std::string name = "(" +  tuple_a.first + " * " + tuple_b.first + ")";
-			rindex[name] = tuple_a.second * m + tuple_b.second;
+			rindex[remove_space(name)] = tuple_a.second * m + tuple_b.second;
 		}
 	}
 	toindex.clear();
@@ -262,10 +264,10 @@ void topology_basic_t::disjoint_union(
 
 	std::map<std::string, int> rindex;
 	for (auto& tuple : mapping_a) {
-		rindex[tuple.first] = tuple.second;
+		rindex[remove_space(tuple.first)] = tuple.second;
 	}
 	for (auto& tuple : mapping_b) {
-		rindex[tuple.first] = n + tuple.second;
+		rindex[remove_space(tuple.first)] = n + tuple.second;
 	}
 	toindex.clear();
 	toindex = rindex;
@@ -298,8 +300,24 @@ void topology_basic_t::disjoint_union(
 void topology_basic_t::set_name_prefix(const std::string& prefix) {
 	std::map<std::string, int> updated;
 	for (auto& t : toindex) {
-		updated[prefix + "." + t.first] = t.second;
+		std::string r = prefix + "." + t.first;
+		updated[remove_space(r)] = t.second;
 	}
 	toindex.clear();
 	toindex = updated;
+}
+
+std::string topology_t::fullname(const std::string& tag) {
+	return remove_space(name + "." + tag);
+}
+
+bool policy_t::contains_tag(const std::string& tag) const {
+	std::string cleaned = remove_space(tag);
+	return tags.find(cleaned) != tags.end();
+}
+
+static inline std::string remove_space(const std::string& s) {
+	std::string r = s;
+	r.erase(std::remove_if(r.begin(), r.end(), isspace), r.end());
+	return r;
 }

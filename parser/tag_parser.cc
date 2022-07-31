@@ -5,7 +5,7 @@
 #include <sstream>
 
 
-static std::string get_type(std::istringstream& iss);
+static Tag_type get_type(std::istringstream& iss);
 static std::string get_symbol(std::istringstream& iss);
 static std::string get_tag(std::istringstream& iss);
 
@@ -28,13 +28,11 @@ tag_data_t::tag_data_t(const char *file_path, const policy_t& policy) {
 		std::istringstream iss(line);
 		try {
 
-			std::string type = get_type(iss);
+			Tag_type type = get_type(iss);
 			std::string symbol = get_symbol(iss);
 			std::string tag = get_tag(iss);
-			std::cout << type << " " << symbol << " : " << tag << std::endl;
-			Tag_type ttype = (type == "atom") ? Tag_type::ATOM : Tag_type::PTR;
 			if (policy.contains_tag(tag)) {
-				tag_struct_t tag_data = { ttype, symbol, tag };
+				tag_struct_t tag_data = { type, symbol, tag };
 				entries.push_back(tag_data);
 			} else {
 				std::cerr << "Tag '" << tag << "' is not in the specified policy!"
@@ -49,7 +47,7 @@ tag_data_t::tag_data_t(const char *file_path, const policy_t& policy) {
 	}
 }
 
-static std::string get_type(std::istringstream& iss) {
+static Tag_type get_type(std::istringstream& iss) {
 	std::string r;
 	char c;
 	while (iss.get(c)) {
@@ -58,8 +56,10 @@ static std::string get_type(std::istringstream& iss) {
 		}
 		r += c;
 	}
-	if (r == "ptr" || r == "atom") {
-		return r;
+	if (r == "ptr") {
+		return Tag_type::PTR;
+	} else if (r == "atom") {
+		return Tag_type::ATOM;
 	}
 	throw std::runtime_error("Only 'ptr' or 'atom' keywords allowed!");
 }
