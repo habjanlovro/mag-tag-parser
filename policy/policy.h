@@ -19,6 +19,7 @@ class topology_t {
 			std::cout << name << std::endl;
 		}
 		virtual std::string fullname(const std::string& tag);
+		virtual int tag_index(const std::string& tag) const = 0;
 	protected:
 		std::string name;
 };
@@ -51,6 +52,8 @@ class topology_linear_t : public topology_t {
 			}
 			std::cout << std::endl;
 		}
+
+		int tag_index(const std::string& tag) const;
 	private:
 		std::vector<std::string> tags;
 };
@@ -61,7 +64,7 @@ class topology_basic_t : public topology_t {
 		topology_basic_t(const std::string& n, const std::set<std::string>& vertices);
 		topology_basic_t(topology_linear_t& t);
 		void add_edge(const std::string& source, const std::string& end);
-		size_t size() {
+		size_t size() const {
 			return mvertices.size();
 		}
 		std::vector<std::vector<uint8_t>>& matrix() {
@@ -78,6 +81,8 @@ class topology_basic_t : public topology_t {
 			const std::shared_ptr<topology_basic_t>& t2);
 		void print();
 		void set_name_prefix(const std::string& prefix);
+		int tag_index(const std::string& tag) const;
+		std::map<int, std::string> reverse_index_mapping();
 	private:
 		std::vector<std::vector<uint8_t>> mvertices;
 		std::map<std::string, int> toindex;
@@ -88,10 +93,12 @@ class policy_t {
 		policy_t() {}
 		policy_t(const char *file_path);
 		bool contains_tag(const std::string& tag) const;
+		int tag_index(const std::string& tag) const;
+
+		std::shared_ptr<topology_basic_t> topology;
 	private:
 		std::map<std::string, std::shared_ptr<topology_t>> topologies;
 		std::set<std::string> tags;
-		std::shared_ptr<topology_basic_t> topology;
 };
 
 

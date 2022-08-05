@@ -112,7 +112,7 @@ void elf_data_t::print_symbols() {
 }
 
 
-elf_symbol_t elf_data_t::get_symbol_info(std::string name) {
+elf_symbol_t elf_data_t::get_symbol_info(const std::string& name) const {
 	auto search = symbol_table.find(name);
 	if (search == symbol_table.end()) {
 		throw std::runtime_error("Symbol '" + name + "' dosen't exist in ELF file!");
@@ -121,7 +121,7 @@ elf_symbol_t elf_data_t::get_symbol_info(std::string name) {
 }
 
 
-uint64_t elf_data_t::get_ptr_addr(uint64_t ptr) {
+uint64_t elf_data_t::get_ptr_addr(const uint64_t ptr) const {
 	uint64_t r = 0;
 
 	for (auto& eshdr : section_hdrs) {

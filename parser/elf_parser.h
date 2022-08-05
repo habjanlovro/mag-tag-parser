@@ -29,8 +29,8 @@ class elf_data_t {
 		elf_data_t(const char *file_path);
 		~elf_data_t();
 		void print_symbols();
-		elf_symbol_t get_symbol_info(std::string name);
-		uint64_t get_ptr_addr(uint64_t ptr);
+		elf_symbol_t get_symbol_info(const std::string& name) const;
+		uint64_t get_ptr_addr(const uint64_t ptr) const;
 
 	private:
 		int fd;

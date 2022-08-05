@@ -321,3 +321,32 @@ static inline std::string remove_space(const std::string& s) {
 	r.erase(std::remove_if(r.begin(), r.end(), isspace), r.end());
 	return r;
 }
+
+int policy_t::tag_index(const std::string& tag) const {
+	return topology->tag_index(tag);
+}
+
+int topology_basic_t::tag_index(const std::string& tag) const {
+	return toindex.at(remove_space(tag));
+}
+
+
+int topology_linear_t::tag_index(const std::string& tag) const {
+	std::string cleaned = remove_space(tag);
+	for (size_t i = 0; i < tags.size(); i++) {
+		if (tags[i] == cleaned) {
+			return i;
+		}
+	}
+	std::ostringstream oss;
+	oss << "Tag '" << tag << "' not in the topology!";
+	throw std::runtime_error(oss.str());
+}
+
+std::map<int, std::string> topology_basic_t::reverse_index_mapping() {
+	std::map<int, std::string> r;
+	for (auto& t : toindex) {
+		r[t.second] = t.first;
+	}
+	return r;
+}

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <errno.h>
 #include <cstring>
 #include "elf.h"
@@ -13,27 +14,14 @@
 #include "policy.h"
 
 
-void out_print_line(const uint64_t addr, const size_t size, const std::string tag) {
-	std::cout << "0x" << std::hex << addr << "," << size << "," << tag << std::endl;
-}
-
-
-void check_stuff(elf_data_t *elf_data, tag_data_t *tag_data) {
-	for (auto &tag_entry : tag_data->getentries()) {
-		try {
-			elf_symbol_t elf_symbol = elf_data->get_symbol_info(tag_entry.symbol);
-			if (tag_entry.type == Tag_type::PTR) {
-				uint64_t addr = elf_data->get_ptr_addr(elf_symbol.value);
-				if (addr > 0) {
-					out_print_line(addr, 1, tag_entry.tag);
-				}
-			}
-			out_print_line(elf_symbol.value, elf_symbol.size, tag_entry.tag);
-		} catch (std::runtime_error& e) {
-			std::cerr << e.what() << std::endl;
-		}
-	}
-}
+void print_policy(std::ofstream& out, const policy_t& policy);
+void print_tags(
+		std::ofstream& out,
+		const elf_data_t& elf_data,
+		const tag_data_t& tag_data,
+		const policy_t& policy);
+static inline void out_print_line(std::ofstream& out, const uint64_t addr,
+	const size_t size, const int tag_index);
 
 
 int main(int argc, char *argv[]) {
@@ -44,6 +32,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	std::unique_ptr<policy_t> policy;
+	std::unique_ptr<elf_data_t> elf_data;
+	std::unique_ptr<tag_data_t> tag_data;
 
 	try {
 		policy = std::make_unique<policy_t>(argv[3]);
@@ -52,9 +42,6 @@ int main(int argc, char *argv[]) {
 	} catch (...) {
 		std::cout << "Failed policy!" << std::endl;
 	}
-
-	std::unique_ptr<elf_data_t> elf_data;
-	std::unique_ptr<tag_data_t> tag_data;
 
 	try {
 		elf_data = std::make_unique<elf_data_t>(argv[1]);
@@ -76,7 +63,52 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	check_stuff(elf_data.get(), tag_data.get());
+	std::ofstream out_file("policy.d2cc");
+	if (out_file.is_open()) {
+		print_policy(out_file, *policy);
+		print_tags(out_file, *elf_data, *tag_data, *policy);
+	}
 
 	return 0;
+}
+
+void print_policy(std::ofstream& out, const policy_t& policy) {
+	out << std::endl;
+	out << policy.topology->size() << std::endl;
+	auto& m = policy.topology->matrix();
+	auto indexes = policy.topology->reverse_index_mapping();
+	for (size_t i = 0; i < m.size(); i++) {
+		out << indexes[i];
+		for (size_t j = 0; j < m[i].size(); j++) {
+			out << " " << (int) m[i][j];
+		}
+		out << std::endl;
+	}
+}
+
+void print_tags(
+		std::ofstream& out,
+		const elf_data_t& elf_data,
+		const tag_data_t& tag_data,
+		const policy_t& policy) {
+	for (auto &tag_entry : tag_data.getentries()) {
+		try {
+			elf_symbol_t elf_symbol = elf_data.get_symbol_info(tag_entry.symbol);
+			if (tag_entry.type == Tag_type::PTR) {
+				uint64_t addr = elf_data.get_ptr_addr(elf_symbol.value);
+				if (addr > 0) {
+					out_print_line(out, addr, 1, policy.tag_index(tag_entry.tag));
+				}
+			}
+			out_print_line(out, elf_symbol.value, elf_symbol.size, policy.tag_index(tag_entry.tag));
+		} catch (std::runtime_error& e) {
+			std::cerr << e.what() << std::endl;
+		}
+	}
+}
+
+static inline void out_print_line(std::ofstream& out, const uint64_t addr,
+		const size_t size, const int tag_index) {
+	out << "0x" << std::hex << addr << ","
+		<< std::dec << size << "," << tag_index << std::endl;
 }
