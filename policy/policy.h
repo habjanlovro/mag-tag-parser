@@ -83,6 +83,7 @@ class topology_basic_t : public topology_t {
 		void set_name_prefix(const std::string& prefix);
 		int tag_index(const std::string& tag) const;
 		std::map<int, std::string> reverse_index_mapping();
+		void add_unknown();
 	private:
 		std::vector<std::vector<uint8_t>> mvertices;
 		std::map<std::string, int> toindex;

@@ -47,6 +47,9 @@ policy_t::policy_t(const char *file_path) {
 			topology->disjoint_union(topology, converted);
 		}
 	}
+
+	tags.insert("unknown");
+	topology->add_unknown();
 }
 
 static std::map<std::string, std::shared_ptr<topology_t>> get_simple_topologies(const std::shared_ptr<ast_node_t>& ast) {
@@ -349,4 +352,20 @@ std::map<int, std::string> topology_basic_t::reverse_index_mapping() {
 		r[t.second] = t.first;
 	}
 	return r;
+}
+
+void topology_basic_t::add_unknown() {
+	auto new_index = std::map<std::string, int>();
+	for (auto& t : toindex) {
+		new_index[t.first] = t.second + 1;
+	}
+	new_index["unknown"] = 0;
+	toindex.clear();
+	toindex = new_index;
+
+	for (auto& row : mvertices) {
+		row.emplace(row.begin(), 0);
+	}
+	auto unknowns = std::vector<uint8_t>(mvertices.size() + 1, 1);
+	mvertices.emplace(mvertices.begin(), unknowns);
 }

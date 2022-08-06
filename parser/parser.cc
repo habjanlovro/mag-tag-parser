@@ -73,7 +73,6 @@ int main(int argc, char *argv[]) {
 }
 
 void print_policy(std::ofstream& out, const policy_t& policy) {
-	out << std::endl;
 	out << policy.topology->size() << std::endl;
 	auto& m = policy.topology->matrix();
 	auto indexes = policy.topology->reverse_index_mapping();
