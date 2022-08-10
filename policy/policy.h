@@ -19,7 +19,7 @@ class topology_t {
 			std::cout << name << std::endl;
 		}
 		virtual std::string fullname(const std::string& tag);
-		virtual int tag_index(const std::string& tag) const = 0;
+		virtual int get_index(const std::string& tag) const = 0;
 	protected:
 		std::string name;
 };
@@ -53,7 +53,7 @@ class topology_linear_t : public topology_t {
 			std::cout << std::endl;
 		}
 
-		int tag_index(const std::string& tag) const;
+		int get_index(const std::string& tag) const;
 	private:
 		std::vector<std::string> tags;
 };
@@ -67,7 +67,7 @@ class topology_basic_t : public topology_t {
 		size_t size() const {
 			return mvertices.size();
 		}
-		std::vector<std::vector<uint8_t>>& matrix() {
+		const std::vector<std::vector<uint8_t>>& matrix() const {
 			return mvertices;
 		}
 		std::map<std::string, int>& index_mapping() {
@@ -81,12 +81,13 @@ class topology_basic_t : public topology_t {
 			const std::shared_ptr<topology_basic_t>& t2);
 		void print();
 		void set_name_prefix(const std::string& prefix);
-		int tag_index(const std::string& tag) const;
-		std::map<int, std::string> reverse_index_mapping();
+		int get_index(const std::string& tag) const;
+		std::string get_tag(int index) const;
 		void add_unknown();
 	private:
 		std::vector<std::vector<uint8_t>> mvertices;
 		std::map<std::string, int> toindex;
+		std::map<int, std::string> fromindex;
 };
 
 class policy_t {

@@ -155,6 +155,7 @@ topology_basic_t::topology_basic_t(const std::string& n) {
 	name = n;
 	mvertices = std::vector<std::vector<uint8_t>>();
 	toindex = std::map<std::string, int>();
+	fromindex = std::map<int, std::string>();
 }
 
 topology_basic_t::topology_basic_t(
@@ -163,9 +164,11 @@ topology_basic_t::topology_basic_t(
 	name = n;
 	mvertices = std::vector<std::vector<uint8_t>>();
 	toindex = std::map<std::string, int>();
+	fromindex = std::map<int, std::string>();
 	int i = 0;
 	for (auto& v : vertices) {
 		toindex[fullname(v)] = i;
+		fromindex[i] = fullname(v);
 		mvertices.push_back(std::vector<uint8_t>(vertices.size()));
 		mvertices[i][i] = 1;
 		i++;
@@ -182,7 +185,9 @@ topology_basic_t::topology_basic_t(topology_linear_t& t) {
 		if (i + 1 < mvertices.size()) {
 			mvertices[i][i + 1] = 1;
 		}
-		toindex[remove_space(t.get_tags().at(i))] = i;
+		std::string tag = remove_space(t.get_tags().at(i));
+		toindex[tag] = i;
+		fromindex[i] = tag;
 	}
 }
 
@@ -215,15 +220,21 @@ void topology_basic_t::carthesian_product(
 	auto& mapping_a = t1->index_mapping();
 	auto& mapping_b = t2->index_mapping();
 
-	std::map<std::string, int> rindex;
+	std::map<std::string, int> r_toindex;
+	std::map<int, std::string> r_fromindex;
 	for (auto& tuple_a : mapping_a) {
 		for (auto& tuple_b : mapping_b) {
-			std::string name = "(" +  tuple_a.first + " * " + tuple_b.first + ")";
-			rindex[remove_space(name)] = tuple_a.second * m + tuple_b.second;
+			std::string name = "(" +  tuple_a.first + "," + tuple_b.first + ")";
+			int index = tuple_a.second * m + tuple_b.second;
+			std::string tag = remove_space(name);
+			r_toindex[tag] = index;
+			r_fromindex[index] = tag;
 		}
 	}
 	toindex.clear();
-	toindex = rindex;
+	toindex = r_toindex;
+	fromindex.clear();
+	fromindex = r_fromindex;
 
 	std::vector<std::vector<uint8_t>> r(n * m);
 	for (size_t i = 0; i < r.size(); i++) {
@@ -265,15 +276,22 @@ void topology_basic_t::disjoint_union(
 	auto& mapping_a = t1->index_mapping();
 	auto& mapping_b = t2->index_mapping();
 
-	std::map<std::string, int> rindex;
+	std::map<std::string, int> r_toindex;
+	std::map<int, std::string> r_fromindex;
 	for (auto& tuple : mapping_a) {
-		rindex[remove_space(tuple.first)] = tuple.second;
+		std::string tag = remove_space(tuple.first);
+		r_toindex[tag] = tuple.second;
+		r_fromindex[tuple.second] = tag;
 	}
 	for (auto& tuple : mapping_b) {
-		rindex[remove_space(tuple.first)] = n + tuple.second;
+		std::string tag = remove_space(tuple.first);
+		r_toindex[tag] = n + tuple.second;
+		r_fromindex[n + tuple.second] = tag;
 	}
 	toindex.clear();
-	toindex = rindex;
+	toindex = r_toindex;
+	fromindex.clear();
+	fromindex = r_fromindex;
 
 	std::vector<std::vector<uint8_t>> r(n + m);
 	for (size_t i = 0; i < r.size(); i++) {
@@ -301,13 +319,17 @@ void topology_basic_t::disjoint_union(
 }
 
 void topology_basic_t::set_name_prefix(const std::string& prefix) {
-	std::map<std::string, int> updated;
+	std::map<std::string, int> updated_to;
+	std::map<int, std::string> updated_from;
 	for (auto& t : toindex) {
-		std::string r = prefix + "." + t.first;
-		updated[remove_space(r)] = t.second;
+		std::string r = remove_space(prefix + "." + t.first);
+		updated_to[r] = t.second;
+		updated_from[t.second] = r;
 	}
 	toindex.clear();
-	toindex = updated;
+	toindex = updated_to;
+	fromindex.clear();
+	fromindex = updated_from;
 }
 
 std::string topology_t::fullname(const std::string& tag) {
@@ -326,15 +348,18 @@ static inline std::string remove_space(const std::string& s) {
 }
 
 int policy_t::tag_index(const std::string& tag) const {
-	return topology->tag_index(tag);
+	return topology->get_index(tag);
 }
 
-int topology_basic_t::tag_index(const std::string& tag) const {
+int topology_basic_t::get_index(const std::string& tag) const {
 	return toindex.at(remove_space(tag));
 }
 
+std::string topology_basic_t::get_tag(int index) const {
+	return fromindex.at(index);
+}
 
-int topology_linear_t::tag_index(const std::string& tag) const {
+int topology_linear_t::get_index(const std::string& tag) const {
 	std::string cleaned = remove_space(tag);
 	for (size_t i = 0; i < tags.size(); i++) {
 		if (tags[i] == cleaned) {
@@ -346,22 +371,19 @@ int topology_linear_t::tag_index(const std::string& tag) const {
 	throw std::runtime_error(oss.str());
 }
 
-std::map<int, std::string> topology_basic_t::reverse_index_mapping() {
-	std::map<int, std::string> r;
-	for (auto& t : toindex) {
-		r[t.second] = t.first;
-	}
-	return r;
-}
-
 void topology_basic_t::add_unknown() {
-	auto new_index = std::map<std::string, int>();
+	auto new_toindex = std::map<std::string, int>();
+	auto new_fromindex = std::map<int, std::string>();
 	for (auto& t : toindex) {
-		new_index[t.first] = t.second + 1;
+		new_toindex[t.first] = t.second + 1;
+		new_fromindex[t.second + 1] = t.first;
 	}
-	new_index["unknown"] = 0;
+	new_toindex["unknown"] = 0;
+	new_fromindex[0] = "unknown";
 	toindex.clear();
-	toindex = new_index;
+	toindex = new_toindex;
+	fromindex.clear();
+	fromindex = new_fromindex;
 
 	for (auto& row : mvertices) {
 		row.emplace(row.begin(), 0);

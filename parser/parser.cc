@@ -7,12 +7,14 @@
 #include <fcntl.h>
 #include <vector>
 #include <memory>
+#include <sstream>
 
 #include "elf_parser.h"
 #include "tag_parser.h"
 
 #include "policy.h"
 
+const std::string output_file_name = "policy.d2sc";
 
 void print_policy(std::ofstream& out, const policy_t& policy);
 void print_tags(
@@ -22,6 +24,48 @@ void print_tags(
 		const policy_t& policy);
 static inline void out_print_line(std::ofstream& out, const uint64_t addr,
 	const size_t size, const int tag_index);
+
+
+void dfs(
+		const std::vector<std::vector<uint8_t>>& m,
+		const int index,
+		std::vector<bool>& discovered,
+		std::vector<int>& end_time,
+		int& time) {
+	discovered[index] = true;
+	for (size_t j = 0; j < m[index].size(); j++) {
+		if (m[index][j] > 0 && !discovered[j]) {
+			dfs(m, j, discovered, end_time, time);
+		}
+	}
+	end_time[index] = time;
+	time++;
+}
+
+void check_dag(const topology_basic_t& t) {
+	std::vector<bool> discovered(t.size());
+	std::vector<int> end_time(t.size());
+	int time = 0;
+	auto& matrix = t.matrix();
+
+	for (size_t i = 0; i < t.size(); i++) {
+		if (!discovered[i]) {
+			dfs(matrix, i, discovered, end_time, time);
+		}
+	}
+
+	for (size_t i = 0; i < t.size(); i++) {
+		for (size_t j = 0; j < t.size(); j++) {
+			if (i != j && matrix[i][j] > 0 && end_time[i] <= end_time[j]) {
+				std::ostringstream oss;
+				oss << "The policy is not a directed acyclical graph!" <<
+					" A cycle was detected with tags '" << t.get_tag(i) << "'"
+					<< " -> '" << t.get_tag(j) << "'!";
+				throw std::runtime_error(oss.str());
+			}
+		}
+	}
+}
 
 
 int main(int argc, char *argv[]) {
@@ -37,10 +81,13 @@ int main(int argc, char *argv[]) {
 
 	try {
 		policy = std::make_unique<policy_t>(argv[3]);
+		check_dag(*policy->topology);
 	} catch (std::runtime_error& err) {
-		std::cout << err.what() << std::endl;
+		std::cerr << err.what() << std::endl;
+		exit(1);
 	} catch (...) {
-		std::cout << "Failed policy!" << std::endl;
+		std::cerr << "Failed policy!" << std::endl;
+		exit(1);
 	}
 
 	try {
@@ -63,7 +110,7 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	std::ofstream out_file("policy.d2cc");
+	std::ofstream out_file(output_file_name);
 	if (out_file.is_open()) {
 		print_policy(out_file, *policy);
 		print_tags(out_file, *elf_data, *tag_data, *policy);
@@ -75,9 +122,8 @@ int main(int argc, char *argv[]) {
 void print_policy(std::ofstream& out, const policy_t& policy) {
 	out << policy.topology->size() << std::endl;
 	auto& m = policy.topology->matrix();
-	auto indexes = policy.topology->reverse_index_mapping();
 	for (size_t i = 0; i < m.size(); i++) {
-		out << indexes[i];
+		out << policy.topology->get_tag(i);
 		for (size_t j = 0; j < m[i].size(); j++) {
 			out << " " << (int) m[i][j];
 		}
