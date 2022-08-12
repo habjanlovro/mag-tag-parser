@@ -8,6 +8,7 @@
 #include <vector>
 #include <memory>
 #include <sstream>
+#include <list>
 
 #include "elf_parser.h"
 #include "tag_parser.h"
@@ -26,45 +27,222 @@ static inline void out_print_line(std::ofstream& out, const uint64_t addr,
 	const size_t size, const int tag_index);
 
 
-void dfs(
+void topological_sort_dfs(
 		const std::vector<std::vector<uint8_t>>& m,
 		const int index,
 		std::vector<bool>& discovered,
 		std::vector<int>& end_time,
-		int& time) {
+		int& time,
+		std::list<int>& topological_order) {
 	discovered[index] = true;
 	for (size_t j = 0; j < m[index].size(); j++) {
 		if (m[index][j] > 0 && !discovered[j]) {
-			dfs(m, j, discovered, end_time, time);
+			topological_sort_dfs(m, j, discovered, end_time, time, topological_order);
 		}
 	}
 	end_time[index] = time;
+	topological_order.push_front(index);
 	time++;
 }
 
-void check_dag(const topology_basic_t& t) {
-	std::vector<bool> discovered(t.size());
-	std::vector<int> end_time(t.size());
+std::list<int> topological_ordering(const std::vector<std::vector<uint8_t>>& m) {
+	std::vector<bool> discovered(m.size());
+	std::vector<int> end_time(m.size());
 	int time = 0;
-	auto& matrix = t.matrix();
+	std::list<int> topological_order;
 
-	for (size_t i = 0; i < t.size(); i++) {
+	for (size_t i = 0; i < m.size(); i++) {
 		if (!discovered[i]) {
-			dfs(matrix, i, discovered, end_time, time);
+			topological_sort_dfs(m, i, discovered, end_time, time, topological_order);
 		}
 	}
 
-	for (size_t i = 0; i < t.size(); i++) {
-		for (size_t j = 0; j < t.size(); j++) {
-			if (i != j && matrix[i][j] > 0 && end_time[i] <= end_time[j]) {
+	for (size_t i = 0; i < m.size(); i++) {
+		for (size_t j = 0; j < m.size(); j++) {
+			if (i != j && m[i][j] > 0 && end_time[i] <= end_time[j]) {
 				std::ostringstream oss;
-				oss << "The policy is not a directed acyclical graph!" <<
-					" A cycle was detected with tags '" << t.get_tag(i) << "'"
-					<< " -> '" << t.get_tag(j) << "'!";
+				oss << "The policy is not a directed acyclical graph!";// <<
+					// " A cycle was detected with tags '" << t.get_tag(i) << "'"
+					// << " -> '" << t.get_tag(j) << "'!";
 				throw std::runtime_error(oss.str());
 			}
 		}
 	}
+	return topological_order;
+}
+
+
+// reverse the graph edges by transposing the matrix
+std::vector<std::vector<uint8_t>> transpose(
+		const std::vector<std::vector<uint8_t>>& m) {
+	auto rm = std::vector<std::vector<uint8_t>>(m.size());
+	for (size_t i = 0; i < m.size(); i++) {
+		rm[i] = std::vector<uint8_t>(m[i].size());
+	}
+
+	for (size_t i = 0; i < m.size(); i++) {
+		for (size_t j = 0; j < m.size(); j++) {
+			rm[j][i] = m[i][j];
+		}
+	}
+
+	return rm;
+}
+
+void add_virtual_node(std::vector<std::vector<uint8_t>>& m) {
+	std::cout << "virtual" << std::endl;
+	std::vector<uint8_t> virtual_edges(m.size() + 1);
+	for (size_t j = 0; j < m.size(); j++) {
+		int in_degree = 0;
+		for (size_t i = 0; i < m.size(); i++) {
+			in_degree += m[i][j];
+		}
+		if (in_degree <= 1) {
+			virtual_edges[j] = 1;
+			std::cout << j << " ";
+		}
+		m[j].push_back(0);
+	}
+	std::cout << std::endl;
+	m.push_back(virtual_edges);
+}
+
+
+std::vector<int> find_terminals(const std::vector<std::vector<uint8_t>>& m, std::list<int> indexes) {
+	std::vector<int> r;
+	for (auto& i : indexes) {
+		bool terminal = true;
+		for (auto& j : indexes) {
+			if (i != j && m[i][j] > 0) {
+				terminal = false;
+				break;
+			}
+		}
+		if (terminal) {
+			r.push_back(i);
+		}
+	}
+	return r;
+}
+
+
+std::vector<std::vector<uint8_t>> preprocess_first(const std::vector<std::vector<uint8_t>>& m) {
+	std::vector<std::vector<uint8_t>> r(m.size());
+	for (int i = 0; i < r.size(); i++) {
+		r[i] = std::vector<uint8_t>(r.size());
+	}
+	std::list<int> indexes;
+	for (int i = 0; i < m.size(); i++) {
+		indexes.push_back(i);
+	}
+	std::vector<int> terminals = find_terminals(m, indexes);
+	std::vector<int> last_deleted;
+	while (terminals.size() > 0) {
+		for (auto& i : terminals) {
+			r[i][i] = 1;
+			for (auto& row : last_deleted) {
+				if (m[i][row] > 0) {
+					for (int j = 0; j < r.size(); j++) {
+						r[i][j] |= r[row][j];
+					}
+				}
+			}
+			indexes.remove(i);
+		}
+		last_deleted.clear();
+		for (auto& i : terminals) {
+			last_deleted.push_back(i);
+		}
+		terminals = find_terminals(m, indexes);
+	}
+
+	for (size_t i = 0; i < r.size(); i++) {
+		for (size_t j = 0; j < r.size(); j++) {
+			std::cout << (int) r[i][j] << " ";
+		}
+		std::cout << std::endl;
+	}
+
+	return r;
+}
+
+std::vector<int> get_sources(const std::vector<std::vector<uint8_t>>& m, const std::list<int>& indexes) {
+	std::vector<int> r;
+	for (auto& i : indexes) {
+		bool source = true;
+		for (auto& j : indexes) {
+			if (i != j && m[j][i] > 0) {
+				source = false;
+				break;
+			}
+		}
+		if (source) {
+			r.push_back(i);
+		}
+	}
+	return r;
+}
+
+std::vector<std::vector<int>> preprocess_second(
+		const std::vector<std::vector<uint8_t>>& m,
+		const std::vector<std::vector<uint8_t>>& desc) {
+	std::vector<std::vector<int>> r(m.size());
+	for (size_t i = 0; i < r.size(); i++) {
+		r[i] = std::vector<int>(m.size(), -1);
+	}
+	std::list<int> indexes;
+	for (int i = 0; i < m.size(); i++) {
+		indexes.push_back(i);
+	}
+	std::list<int> deleted;
+	std::vector<int> sources = get_sources(m, indexes);
+	int numbering = 0;
+	std::map<int, int> number_to_index;
+	number_to_index[-1] = -1;
+	while (sources.size() > 0) {
+		for (auto& s : sources) {
+			number_to_index[numbering] = s;
+			for (size_t j = 0; j < r.size(); j++) {
+				if (desc[s][j] > 0) {
+					r[s][j] = numbering;
+				}
+			}
+			for (auto& ancestor : deleted) {
+				if (m[ancestor][s] > 0) {
+					for (size_t j = 0; j < r.size(); j++) {
+						if (r[ancestor][j] > r[s][j]) {
+							r[s][j] = r[ancestor][j];
+						}
+					}
+				}
+			}
+
+			deleted.push_back(s);
+			indexes.remove(s);
+			numbering++;
+		}
+
+		sources = get_sources(m, indexes);
+	}
+
+	for (size_t i = 0; i < r.size(); i++) {
+		for (size_t j = 0; j < r.size(); j++) {
+			std::cout << r[i][j] << " ";
+		}
+		std::cout << std::endl;
+	}
+
+	std::cout << std::endl;
+
+	for (size_t i = 0; i < r.size(); i++) {
+		for (size_t j = 0; j < r.size(); j++) {
+			r[i][j] = number_to_index[r[i][j]];
+			std::cout << r[i][j] << " ";
+		}
+		std::cout << std::endl;
+	}
+
+	return r;
 }
 
 
@@ -81,7 +259,34 @@ int main(int argc, char *argv[]) {
 
 	try {
 		policy = std::make_unique<policy_t>(argv[3]);
-		check_dag(*policy->topology);
+		auto& matrix = policy->topology->matrix();
+		auto transposed = transpose(matrix);
+
+		auto closure = preprocess_first(transposed);
+		std::cout << std::endl;
+		preprocess_second(transposed, closure);
+
+		// add_virtual_node(transposed);
+		// auto topological_sort = topological_ordering(transposed);
+		// auto *lca_tree = new tree_t(topological_sort.front(), 0, nullptr, std::vector<tree_t *>());
+		// for (auto& i : topological_sort) {
+		// 	std::cout << i << " ";
+		// }
+		// std::cout << std::endl;
+		// topological_sort.pop_front();
+		// for (auto& index : topological_sort) {
+		// 	std::vector<int> parents;
+		// 	std::cout << index << std::endl;
+		// 	if (is_tree_node(transposed, index, parents)) {
+		// 		std::cout << "tree node" << std::endl;
+		// 		add_node(lca_tree, index, parents.at(0));
+		// 	} else {
+		// 		std::cout << "not tree node " << parents.size() << std::endl;
+		// 		int parent = lca_multiple(lca_tree, parents);
+		// 		add_node(lca_tree, index, parent);
+		// 	}
+		// }
+		// print_tree(lca_tree);
 	} catch (std::runtime_error& err) {
 		std::cerr << err.what() << std::endl;
 		exit(1);
