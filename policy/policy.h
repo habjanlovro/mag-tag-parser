@@ -97,10 +97,19 @@ class policy_t {
 		bool contains_tag(const std::string& tag) const;
 		int tag_index(const std::string& tag) const;
 
+		void set_lca_matrix(const std::vector<std::vector<uint8_t>> lca) {
+			lca_matrix = lca;
+		}
+
+		const std::vector<std::vector<uint8_t>>& get_lca_matrix() const {
+			return lca_matrix;
+		}
+
 		std::shared_ptr<topology_basic_t> topology;
 	private:
 		std::map<std::string, std::shared_ptr<topology_t>> topologies;
 		std::set<std::string> tags;
+		std::vector<std::vector<uint8_t>> lca_matrix;
 };
 
 

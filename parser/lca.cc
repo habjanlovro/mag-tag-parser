@@ -97,3 +97,26 @@ void print_tree(tree_t *t) {
 		print_tree(c);
 	}
 }
+
+
+// add_virtual_node(transposed);
+// auto topological_sort = topological_ordering(transposed);
+// auto *lca_tree = new tree_t(topological_sort.front(), 0, nullptr, std::vector<tree_t *>());
+// for (auto& i : topological_sort) {
+// 	std::cout << i << " ";
+// }
+// std::cout << std::endl;
+// topological_sort.pop_front();
+// for (auto& index : topological_sort) {
+// 	std::vector<int> parents;
+// 	std::cout << index << std::endl;
+// 	if (is_tree_node(transposed, index, parents)) {
+// 		std::cout << "tree node" << std::endl;
+// 		add_node(lca_tree, index, parents.at(0));
+// 	} else {
+// 		std::cout << "not tree node " << parents.size() << std::endl;
+// 		int parent = lca_multiple(lca_tree, parents);
+// 		add_node(lca_tree, index, parent);
+// 	}
+// }
+// print_tree(lca_tree);

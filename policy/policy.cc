@@ -162,14 +162,14 @@ topology_basic_t::topology_basic_t(
 		const std::string& n,
 		const std::set<std::string>& vertices) {
 	name = n;
-	mvertices = std::vector<std::vector<uint8_t>>();
+	mvertices = std::vector<std::vector<uint8_t>>(
+		vertices.size(), std::vector<uint8_t>(vertices.size()));
 	toindex = std::map<std::string, int>();
 	fromindex = std::map<int, std::string>();
 	int i = 0;
 	for (auto& v : vertices) {
 		toindex[fullname(v)] = i;
 		fromindex[i] = fullname(v);
-		mvertices.push_back(std::vector<uint8_t>(vertices.size()));
 		mvertices[i][i] = 1;
 		i++;
 	}
@@ -178,9 +178,8 @@ topology_basic_t::topology_basic_t(
 topology_basic_t::topology_basic_t(topology_linear_t& t) {
 	name = t.get_name();
 	size_t n = t.get_tags().size();
-	mvertices = std::vector<std::vector<uint8_t>>(n);
+	mvertices = std::vector<std::vector<uint8_t>>(n, std::vector<uint8_t>(n));
 	for (size_t i = 0; i < n; i++) {
-		mvertices[i] = std::vector<uint8_t>(n);
 		mvertices[i][i] = 1;
 		if (i + 1 < mvertices.size()) {
 			mvertices[i][i + 1] = 1;
@@ -236,10 +235,7 @@ void topology_basic_t::carthesian_product(
 	fromindex.clear();
 	fromindex = r_fromindex;
 
-	std::vector<std::vector<uint8_t>> r(n * m);
-	for (size_t i = 0; i < r.size(); i++) {
-		r[i] = std::vector<uint8_t>(n * m);
-	}
+	std::vector<std::vector<uint8_t>> r(n * m, std::vector<uint8_t>(n * m));
 
 	/* Do R = A (x) I_2 */
 	for (size_t i = 0; i < n; i++) {
@@ -293,10 +289,7 @@ void topology_basic_t::disjoint_union(
 	fromindex.clear();
 	fromindex = r_fromindex;
 
-	std::vector<std::vector<uint8_t>> r(n + m);
-	for (size_t i = 0; i < r.size(); i++) {
-		r[i] = std::vector<uint8_t>(r.size());
-	}
+	std::vector<std::vector<uint8_t>> r(n + m, std::vector<uint8_t>(n + m));
 
 	/* Perform direct sum of matrices */
 	for (size_t i = 0; i < n; i++) {

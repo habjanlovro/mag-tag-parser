@@ -15,6 +15,8 @@
 
 #include "policy.h"
 
+#define INVALID_TAG ((uint8_t) ((1 << 8) - 1))
+
 const std::string output_file_name = "policy.d2sc";
 
 void print_policy(std::ofstream& out, const policy_t& policy);
@@ -73,12 +75,10 @@ std::list<int> topological_ordering(const std::vector<std::vector<uint8_t>>& m) 
 
 
 // reverse the graph edges by transposing the matrix
-std::vector<std::vector<uint8_t>> transpose(
+std::vector<std::vector<uint8_t>> reverse_graph(
 		const std::vector<std::vector<uint8_t>>& m) {
-	auto rm = std::vector<std::vector<uint8_t>>(m.size());
-	for (size_t i = 0; i < m.size(); i++) {
-		rm[i] = std::vector<uint8_t>(m[i].size());
-	}
+	auto rm = std::vector<std::vector<uint8_t>>(
+		m.size(), std::vector<uint8_t>(m.size()));
 
 	for (size_t i = 0; i < m.size(); i++) {
 		for (size_t j = 0; j < m.size(); j++) {
@@ -90,7 +90,6 @@ std::vector<std::vector<uint8_t>> transpose(
 }
 
 void add_virtual_node(std::vector<std::vector<uint8_t>>& m) {
-	std::cout << "virtual" << std::endl;
 	std::vector<uint8_t> virtual_edges(m.size() + 1);
 	for (size_t j = 0; j < m.size(); j++) {
 		int in_degree = 0;
@@ -99,16 +98,16 @@ void add_virtual_node(std::vector<std::vector<uint8_t>>& m) {
 		}
 		if (in_degree <= 1) {
 			virtual_edges[j] = 1;
-			std::cout << j << " ";
 		}
 		m[j].push_back(0);
 	}
-	std::cout << std::endl;
 	m.push_back(virtual_edges);
 }
 
 
-std::vector<int> find_terminals(const std::vector<std::vector<uint8_t>>& m, std::list<int> indexes) {
+std::vector<int> find_terminals(
+		const std::vector<std::vector<uint8_t>>& m,
+		std::list<int> indexes) {
 	std::vector<int> r;
 	for (auto& i : indexes) {
 		bool terminal = true;
@@ -127,14 +126,13 @@ std::vector<int> find_terminals(const std::vector<std::vector<uint8_t>>& m, std:
 
 
 std::vector<std::vector<uint8_t>> preprocess_first(const std::vector<std::vector<uint8_t>>& m) {
-	std::vector<std::vector<uint8_t>> r(m.size());
-	for (int i = 0; i < r.size(); i++) {
-		r[i] = std::vector<uint8_t>(r.size());
-	}
+	std::vector<std::vector<uint8_t>> r(m.size(), std::vector<uint8_t>(m.size()));
+
 	std::list<int> indexes;
-	for (int i = 0; i < m.size(); i++) {
+	for (size_t i = 0; i < m.size(); i++) {
 		indexes.push_back(i);
 	}
+
 	std::vector<int> terminals = find_terminals(m, indexes);
 	std::vector<int> last_deleted;
 	while (terminals.size() > 0) {
@@ -142,7 +140,7 @@ std::vector<std::vector<uint8_t>> preprocess_first(const std::vector<std::vector
 			r[i][i] = 1;
 			for (auto& row : last_deleted) {
 				if (m[i][row] > 0) {
-					for (int j = 0; j < r.size(); j++) {
+					for (size_t j = 0; j < r.size(); j++) {
 						r[i][j] |= r[row][j];
 					}
 				}
@@ -150,23 +148,17 @@ std::vector<std::vector<uint8_t>> preprocess_first(const std::vector<std::vector
 			indexes.remove(i);
 		}
 		last_deleted.clear();
-		for (auto& i : terminals) {
-			last_deleted.push_back(i);
-		}
-		terminals = find_terminals(m, indexes);
-	}
+		last_deleted = terminals;
 
-	for (size_t i = 0; i < r.size(); i++) {
-		for (size_t j = 0; j < r.size(); j++) {
-			std::cout << (int) r[i][j] << " ";
-		}
-		std::cout << std::endl;
+		terminals = find_terminals(m, indexes);
 	}
 
 	return r;
 }
 
-std::vector<int> get_sources(const std::vector<std::vector<uint8_t>>& m, const std::list<int>& indexes) {
+std::vector<int> get_sources(
+		const std::vector<std::vector<uint8_t>>& m,
+		const std::list<int>& indexes) {
 	std::vector<int> r;
 	for (auto& i : indexes) {
 		bool source = true;
@@ -183,22 +175,19 @@ std::vector<int> get_sources(const std::vector<std::vector<uint8_t>>& m, const s
 	return r;
 }
 
-std::vector<std::vector<int>> preprocess_second(
+std::vector<std::vector<uint8_t>> preprocess_second(
 		const std::vector<std::vector<uint8_t>>& m,
 		const std::vector<std::vector<uint8_t>>& desc) {
-	std::vector<std::vector<int>> r(m.size());
-	for (size_t i = 0; i < r.size(); i++) {
-		r[i] = std::vector<int>(m.size(), -1);
-	}
+	std::vector<std::vector<int>> r(m.size(), std::vector<int>(m.size(), -1));
+
 	std::list<int> indexes;
-	for (int i = 0; i < m.size(); i++) {
+	for (size_t i = 0; i < m.size(); i++) {
 		indexes.push_back(i);
 	}
 	std::list<int> deleted;
 	std::vector<int> sources = get_sources(m, indexes);
 	int numbering = 0;
-	std::map<int, int> number_to_index;
-	number_to_index[-1] = -1;
+	std::map<int, uint8_t> number_to_index = {{-1, INVALID_TAG}};
 	while (sources.size() > 0) {
 		for (auto& s : sources) {
 			number_to_index[numbering] = s;
@@ -225,24 +214,15 @@ std::vector<std::vector<int>> preprocess_second(
 		sources = get_sources(m, indexes);
 	}
 
+	std::vector<std::vector<uint8_t>> lca_matrix(
+		m.size(), std::vector<uint8_t>(m.size(), INVALID_TAG));
 	for (size_t i = 0; i < r.size(); i++) {
 		for (size_t j = 0; j < r.size(); j++) {
-			std::cout << r[i][j] << " ";
+			lca_matrix[i][j] = number_to_index[r[i][j]];
 		}
-		std::cout << std::endl;
 	}
 
-	std::cout << std::endl;
-
-	for (size_t i = 0; i < r.size(); i++) {
-		for (size_t j = 0; j < r.size(); j++) {
-			r[i][j] = number_to_index[r[i][j]];
-			std::cout << r[i][j] << " ";
-		}
-		std::cout << std::endl;
-	}
-
-	return r;
+	return lca_matrix;
 }
 
 
@@ -260,33 +240,10 @@ int main(int argc, char *argv[]) {
 	try {
 		policy = std::make_unique<policy_t>(argv[3]);
 		auto& matrix = policy->topology->matrix();
-		auto transposed = transpose(matrix);
-
+		auto transposed = reverse_graph(matrix);
 		auto closure = preprocess_first(transposed);
-		std::cout << std::endl;
-		preprocess_second(transposed, closure);
-
-		// add_virtual_node(transposed);
-		// auto topological_sort = topological_ordering(transposed);
-		// auto *lca_tree = new tree_t(topological_sort.front(), 0, nullptr, std::vector<tree_t *>());
-		// for (auto& i : topological_sort) {
-		// 	std::cout << i << " ";
-		// }
-		// std::cout << std::endl;
-		// topological_sort.pop_front();
-		// for (auto& index : topological_sort) {
-		// 	std::vector<int> parents;
-		// 	std::cout << index << std::endl;
-		// 	if (is_tree_node(transposed, index, parents)) {
-		// 		std::cout << "tree node" << std::endl;
-		// 		add_node(lca_tree, index, parents.at(0));
-		// 	} else {
-		// 		std::cout << "not tree node " << parents.size() << std::endl;
-		// 		int parent = lca_multiple(lca_tree, parents);
-		// 		add_node(lca_tree, index, parent);
-		// 	}
-		// }
-		// print_tree(lca_tree);
+		auto lca_matrix = preprocess_second(transposed, closure);
+		policy->set_lca_matrix(lca_matrix);
 	} catch (std::runtime_error& err) {
 		std::cerr << err.what() << std::endl;
 		exit(1);
@@ -326,7 +283,7 @@ int main(int argc, char *argv[]) {
 
 void print_policy(std::ofstream& out, const policy_t& policy) {
 	out << policy.topology->size() << std::endl;
-	auto& m = policy.topology->matrix();
+	auto& m = policy.get_lca_matrix();
 	for (size_t i = 0; i < m.size(); i++) {
 		out << policy.topology->get_tag(i);
 		for (size_t j = 0; j < m[i].size(); j++) {
