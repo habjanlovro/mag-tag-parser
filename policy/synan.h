@@ -23,7 +23,9 @@ enum class Nont {
 	SUMREST,
 	MUL,
 	MULREST,
-	ELEM
+	ELEM,
+	PG,
+	PG_REST
 };
 
 

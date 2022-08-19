@@ -49,6 +49,30 @@ class ast_topology_t : public ast_decl_t {
 
 /* Derived classes */
 
+class ast_pg_t : public ast_decl_t {
+	public:
+		ast_pg_t(const std::string& type, const std::string& t) {
+			tag = t;
+			if (type == "in") {
+				fd = 0;
+			} else if (type == "out") {
+				fd = 1;
+			} else {
+				throw std::runtime_error("pg type can be 'in' or 'out'!");
+
+			}
+		}
+		~ast_pg_t() {}
+
+		void set_name(const std::string& n) {
+			name = n;
+		}
+	private:
+		std::string name;
+		size_t fd;
+		std::string tag;
+};
+
 class ast_source_t : public ast_node_t {
 	public:
 		ast_source_t() {}

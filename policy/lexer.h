@@ -14,12 +14,14 @@ enum class Term {
 	MULT,
 	COLON,
 	COMMA,
+	EQUAL,
 	ARROW,
 	BASIC,
 	LINEAR,
 	EXPR,
 	TOPOLOGY,
 	PG,
+	PG_TYPE,
 	IDENTIFIER,
 	END
 };

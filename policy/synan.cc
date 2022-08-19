@@ -22,11 +22,16 @@ static dertree_t parse_sum_rest(std::vector<symbol_t>& symbols);
 static dertree_t parse_mul(std::vector<symbol_t>& symbols);
 static dertree_t parse_mul_rest(std::vector<symbol_t>& symbols);
 static dertree_t parse_elem(std::vector<symbol_t>& symbols);
+static dertree_t parse_pg(std::vector<symbol_t>& symbols);
+static dertree_t parse_pg_rest(std::vector<symbol_t>& symbols);
 
 static inline std::string error_msg(const symbol_t &s, const std::string expected);
 
 static inline symbol_t& peek(std::vector<symbol_t>& symbols, const std::string err);
 static inline symbol_t& consume(std::vector<symbol_t>& symbols, const std::string err);
+
+static void add_leaf(dertree_t& t, std::vector<symbol_t>& symbols,
+	Term expected_symbol, const std::string& err);
 
 
 size_t symbol_index = 0;
@@ -51,7 +56,17 @@ static dertree_t parse_decls(std::vector<symbol_t>& symbols) {
 static dertree_t parse_decl(std::vector<symbol_t>& symbols) {
 	dertree_t t;
 	t.label = Nont::DECL;
-	t.subtrees.push_back(parse_topology(symbols));
+	auto& s = peek(symbols, "Missing declarations!");
+	switch (s.term) {
+		case Term::TOPOLOGY:
+			t.subtrees.push_back(parse_topology(symbols));
+			break;
+		case Term::PG:
+			t.subtrees.push_back(parse_pg(symbols));
+			break;
+		default:
+			throw std::runtime_error(error_msg(s, "declarations"));
+	}
 	return t;
 }
 
@@ -63,6 +78,7 @@ static dertree_t parse_declrest(std::vector<symbol_t>& symbols) {
 		case Term::END:
 			break;
 		case Term::TOPOLOGY:
+		case Term::PG:
 			t.subtrees.push_back(parse_decl(symbols));
 			t.subtrees.push_back(parse_declrest(symbols));
 			break;
@@ -75,25 +91,12 @@ static dertree_t parse_declrest(std::vector<symbol_t>& symbols) {
 static dertree_t parse_topology(std::vector<symbol_t>& symbols) {
 	dertree_t t;
 	t.label = Nont::TOPOLOGY;
-	symbol_t &s = consume(symbols, "Missing 'topology'!");
-	if (s.term != Term::TOPOLOGY) {
-		throw std::runtime_error(error_msg(s, "'topology'"));
-	}
-	t.leaves.push_back(s);
 
-	s = consume(symbols, "Missing an identifier!");
-	if (s.term != Term::IDENTIFIER) {
-		throw std::runtime_error(error_msg(s, "an identifier"));
-	}
-	t.leaves.push_back(s);
-
-	s = consume(symbols, "Missing a ':'!");
-	if (s.term != Term::COLON) {
-		throw std::runtime_error(error_msg(s, "':'"));
-	}
-	t.leaves.push_back(s);
-
+	add_leaf(t, symbols, Term::TOPOLOGY, "'topology'");
+	add_leaf(t, symbols, Term::IDENTIFIER, "an identifier");
+	add_leaf(t, symbols, Term::COLON, "':'");
 	t.subtrees.push_back(parse_topology_rest(symbols));
+
 	return t;
 }
 
@@ -106,11 +109,9 @@ static dertree_t parse_topology_rest(std::vector<symbol_t>& symbols) {
 
 	switch (s.term) {
 		case Term::BASIC:
-			s = consume(symbols, "Missing '{'!");
-			t.leaves.push_back(s);
+			add_leaf(t, symbols, Term::LBRACE, "'{'");
 			t.subtrees.push_back(parse_basic(symbols));
-			s = consume(symbols, "Missing '}'!");
-			t.leaves.push_back(s);
+			add_leaf(t, symbols, Term::RBRACE, "'}");
 			break;
 		case Term::LINEAR:
 			t.subtrees.push_back(parse_linear(symbols));
@@ -141,23 +142,9 @@ static dertree_t parse_edge(std::vector<symbol_t>& symbols) {
 	dertree_t t;
 	t.label = Nont::EDGE;
 
-	auto& s = consume(symbols, "Missing an identifier!");
-	if (s.term != Term::IDENTIFIER) {
-		throw std::runtime_error(error_msg(s, "an identifier"));
-	}
-	t.leaves.push_back(s);
-
-	s = consume(symbols, "Missing '->'!");
-	if (s.term != Term::ARROW) {
-		throw std::runtime_error(error_msg(s, "'->'"));
-	}
-	t.leaves.push_back(s);
-
-	s = consume(symbols, "Missing an identifier!");
-	if (s.term != Term::IDENTIFIER) {
-		throw std::runtime_error(error_msg(s, "an identifier"));
-	}
-	t.leaves.push_back(s);
+	add_leaf(t, symbols, Term::IDENTIFIER, "an identifier");
+	add_leaf(t, symbols, Term::ARROW, "'->'");
+	add_leaf(t, symbols, Term::IDENTIFIER, "an identifier");
 
 	return t;
 }
@@ -186,11 +173,7 @@ static dertree_t parse_linear(std::vector<symbol_t>& symbols) {
 	dertree_t t;
 	t.label = Nont::LINEAR;
 
-	auto& s = consume(symbols, "Missing an identifier!");
-	if (s.term != Term::IDENTIFIER) {
-		throw std::invalid_argument(error_msg(s, "an identifier"));
-	}
-	t.leaves.push_back(s);
+	add_leaf(t, symbols, Term::IDENTIFIER, "an identifier");
 	t.subtrees.push_back(parse_linear_rest(symbols));
 	return t;
 }
@@ -202,6 +185,7 @@ static dertree_t parse_linear_rest(std::vector<symbol_t>& symbols) {
 	switch (s.term) {
 		case Term::TOPOLOGY:
 		case Term::END:
+		case Term::PG:
 			break;
 		case Term::COMMA:
 			t.leaves.push_back(s);
@@ -256,6 +240,7 @@ static dertree_t parse_sum_rest(std::vector<symbol_t>& symbols) {
 		case Term::TOPOLOGY:
 		case Term::RPAREN:
 		case Term::END:
+		case Term::PG:
 			break;
 		case Term::PLUS:
 			t.leaves.push_back(s);
@@ -295,6 +280,7 @@ static dertree_t parse_mul_rest(std::vector<symbol_t>& symbols) {
 		case Term::RPAREN:
 		case Term::END:
 		case Term::PLUS:
+		case Term::PG:
 			break;
 		case Term::MULT:
 			t.leaves.push_back(s);
@@ -319,14 +305,47 @@ static dertree_t parse_elem(std::vector<symbol_t>& symbols) {
 		case Term::LPAREN:
 			t.leaves.push_back(s);
 			t.subtrees.push_back(parse_sum(symbols));
-			s = consume(symbols, "Missing ')'!");
-			t.leaves.push_back(s);
+			add_leaf(t, symbols, Term::RPAREN, "')'");
 			break;
 		default:
 			throw std::runtime_error(error_msg(s, "an identifier or a nested expression"));
 	}
 	return t;
 }
+
+static dertree_t parse_pg(std::vector<symbol_t>& symbols) {
+	dertree_t t;
+	t.label = Nont::PG;
+
+	add_leaf(t, symbols, Term::PG, "'pg'");
+	add_leaf(t, symbols, Term::IDENTIFIER, "an identifier");
+	add_leaf(t, symbols, Term::LBRACE, "'{'");
+	t.subtrees.push_back(parse_pg_rest(symbols));
+	add_leaf(t, symbols, Term::RBRACE, "'}'");
+
+	return t;
+}
+
+static dertree_t parse_pg_rest(std::vector<symbol_t>& symbols) {
+	dertree_t t;
+	t.label = Nont::PG_REST;
+
+	add_leaf(t, symbols, Term::PG_TYPE, "'type'");
+	add_leaf(t, symbols, Term::COLON, "':'");
+	add_leaf(t, symbols, Term::IDENTIFIER, "'in' or 'out'");
+	if ((t.leaves.back().name != "in") && (t.leaves.back().name != "out")) {
+		throw std::runtime_error(error_msg(t.leaves.back(), "'in' or 'out'"));
+	}
+	add_leaf(t, symbols, Term::IDENTIFIER, "'tag'");
+	if (t.leaves.back().name != "tag") {
+		throw std::runtime_error(error_msg(t.leaves.back(), "'tag'"));
+	}
+	add_leaf(t, symbols, Term::EQUAL, "'='");
+	add_leaf(t, symbols, Term::IDENTIFIER, "an identifier");
+
+	return t;
+}
+
 
 static inline std::string error_msg(const symbol_t &s, const std::string expected) {
 	std::ostringstream oss;
@@ -350,4 +369,13 @@ static inline symbol_t& consume(std::vector<symbol_t>& symbols, const std::strin
 	} catch (std::out_of_range& e) {
 		throw std::runtime_error(err);
 	}
+}
+
+static void add_leaf(dertree_t& t, std::vector<symbol_t>& symbols,
+		Term expected_symbol, const std::string& err) {
+	auto& s = consume(symbols, "Missing " + err);
+	if (s.term != expected_symbol) {
+		throw std::runtime_error(error_msg(s, err));
+	}
+	t.leaves.push_back(s);
 }

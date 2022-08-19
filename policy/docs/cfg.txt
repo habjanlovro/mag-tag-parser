@@ -9,8 +9,9 @@ DECLREST -> DECL DECLREST .
 DECLREST -> .
 
 DECL -> TOPOLOGY .
+DECL -> PG .
 
-TOPOLOGY -> topology id colon TOPOLOGYREST .
+TOPOLOGY -> topology id : TOPOLOGYREST .
 
 TOPOLOGYREST -> basic { BASIC } .
 TOPOLOGYREST -> linear LIN .
@@ -42,3 +43,8 @@ MUL' -> .
 
 ELEM -> id .
 ELEM -> ( SUM ) .
+
+
+PG -> pg id { PGREST } .
+
+PGREST -> type : id id = id .

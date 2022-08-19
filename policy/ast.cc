@@ -84,11 +84,13 @@ std::shared_ptr<ast_node_t> ast_construct(const dertree_t& node, std::shared_ptr
 			auto pe = std::dynamic_pointer_cast<ast_expr_t>(ast_construct(node.subtrees.at(0), nullptr));
 			return std::make_shared<ast_topology_expr_t>(pe);
 		}
-		case Nont::SUM: case Nont::MUL: {
+		case Nont::SUM:
+		case Nont::MUL: {
 			auto plhs = ast_construct(node.subtrees.at(0), nullptr);
 			return ast_construct(node.subtrees.at(1), plhs);
 		}
-		case Nont::MULREST: case Nont::SUMREST: {
+		case Nont::MULREST:
+		case Nont::SUMREST: {
 			if (node.subtrees.size() == 0) {
 				return arg;
 			}
@@ -102,6 +104,23 @@ std::shared_ptr<ast_node_t> ast_construct(const dertree_t& node, std::shared_ptr
 			return (node.subtrees.size() == 0) ?
 				std::make_shared<ast_tag_t>(node.leaves.at(0).name) :
 				ast_construct(node.subtrees.at(0), nullptr);
+		}
+		case Nont::PG: {
+			if (node.subtrees.size() == 0) {
+				return nullptr;
+			}
+			auto pg = std::dynamic_pointer_cast<ast_pg_t>(ast_construct(node.subtrees.at(0), nullptr));
+			if (!pg) {
+				return nullptr;
+			}
+			pg->set_name(node.leaves.at(1).name);
+			return pg;
+		}
+		case Nont::PG_REST: {
+			if (node.leaves.size() <= 6) {
+				return nullptr;
+			}
+			auto pg = std::make_shared<ast_pg_t>(node.leaves.at(2).name, node.leaves.at(4).name);
 		}
 		default:
 			throw std::runtime_error("Unknown syntax!");

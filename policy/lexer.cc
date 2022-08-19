@@ -55,6 +55,8 @@ std::vector<symbol_t> lexify(const char *file_path) {
 			symbols.push_back({ Term::PLUS, "+", line, column });
 		} else if (c == '*') {
 			symbols.push_back({ Term::MULT, "*", line, column });
+		} else if (c == '=') {
+			symbols.push_back({ Term::EQUAL, "=", line, column});
 		} else if (c == '-') {
 			infile.get(c);
 			column++;
@@ -66,16 +68,14 @@ std::vector<symbol_t> lexify(const char *file_path) {
 					<< line << ", " << column;
 				throw std::runtime_error(oss.str());
 			}
-		} else if ((c >= 'a' && c <= 'z') ||
-				(c >= 'A' && c <= 'Z') ||
-				(c >= '0' && c <= '9')) {
+		} else if (is_identifier(c)) {
 			std::string s;
 			int start_column = column;
 			do {
 				s += c;
 				infile.get(c);
 				column++;
-			} while (!is_whitespace(c) && is_identifier(c) && !infile.eof());
+			} while (is_identifier(c) && !infile.eof());
 			infile.unget();
 			column--;
 
@@ -89,6 +89,8 @@ std::vector<symbol_t> lexify(const char *file_path) {
 				symbols.push_back({ Term::TOPOLOGY, s, line, start_column });
 			} else if (s == "pg") {
 				symbols.push_back({ Term::PG, s, line, start_column });
+			} else if (s == "type") {
+				symbols.push_back({ Term::PG_TYPE, s, line, start_column});
 			} else {
 				symbols.push_back({ Term::IDENTIFIER, s, line, start_column });
 			}
@@ -113,5 +115,5 @@ static inline bool is_identifier(const char c) {
 	return (c >= 'a' && c <= 'z') ||
 		(c >= 'A' && c <= 'Z') ||
 		(c >= '0' && c <= '9') ||
-		(c == '_');
+		(c == '_') || (c == '.');
 }
