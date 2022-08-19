@@ -8,9 +8,11 @@ policy_hdrs = \
 	synan.h \
 	ast.h \
 	policy.h \
+	lca.h \
 
 policy_srcs = \
 	lexer.cc \
 	synan.cc \
 	ast.cc \
 	policy.cc \
+	lca.cc \
