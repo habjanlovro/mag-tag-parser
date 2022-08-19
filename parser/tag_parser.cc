@@ -6,9 +6,9 @@
 
 
 static Tag_type get_type(std::istringstream& iss);
-static std::string get_symbol(std::istringstream& iss);
-static std::string get_tag(std::istringstream& iss);
-
+static std::pair<std::string, bool> get_symbol(std::istringstream& iss);
+static std::string get_tag(std::istringstream& iss, bool colon);
+static size_t get_ptr_size(std::istringstream& iss, bool& colon);
 
 tag_data_t::tag_data_t(const char *file_path, const policy_t& policy) {
 	std::ifstream infile(file_path);
@@ -29,10 +29,15 @@ tag_data_t::tag_data_t(const char *file_path, const policy_t& policy) {
 		try {
 
 			Tag_type type = get_type(iss);
-			std::string symbol = get_symbol(iss);
-			std::string tag = get_tag(iss);
+			auto t = get_symbol(iss);
+			std::string symbol = t.first;
+			size_t size = (type == Tag_type::PTR) ?
+				get_ptr_size(iss, t.second) :
+				0;
+			std::string tag = get_tag(iss, t.second);
+
 			if (policy.contains_tag(tag)) {
-				tag_struct_t tag_data = { type, symbol, tag };
+				tag_struct_t tag_data = { type, symbol, tag, size };
 				entries.push_back(tag_data);
 			} else {
 				std::cerr << "Tag '" << tag << "' is not in the specified policy!"
@@ -64,7 +69,7 @@ static Tag_type get_type(std::istringstream& iss) {
 	throw std::runtime_error("Only 'ptr' or 'atom' keywords allowed!");
 }
 
-static std::string get_symbol(std::istringstream& iss) {
+static std::pair<std::string, bool> get_symbol(std::istringstream& iss) {
 	std::string r;
 	char c;
 	bool colon = false;
@@ -77,20 +82,28 @@ static std::string get_symbol(std::istringstream& iss) {
 		}
 		r += c;
 	}
-	if (!colon) {
-		do {
-			iss.get(c);
-		} while (c != ':' && !iss.eof());
-	}
+
 	if (iss.eof()) {
-		throw std::runtime_error("Missing colon or tag!");
+		throw std::runtime_error("Missing rest of tag declaration!");
 	}
-	return r;
+	return std::make_pair(r, colon);
 }
 
-static std::string get_tag(std::istringstream& iss) {
+static std::string get_tag(std::istringstream& iss, bool colon) {
 	std::string r;
 	char c;
+	if (!colon) {
+		bool colon_found = false;
+		do {
+			iss.get(c);
+			colon_found = c == ':';
+		} while (!colon_found && !iss.eof());
+
+		if (!colon_found) {
+			throw std::runtime_error("Colon not found in declaration!");
+		}
+	}
+
 	do {
 		iss.get(c);
 	} while (c == ' ' && !iss.eof());
@@ -109,5 +122,52 @@ static std::string get_tag(std::istringstream& iss) {
 		string_end++;
 	}
 	r.erase(string_end, r.end());
+	return r;
+}
+
+
+static size_t get_ptr_size(std::istringstream& iss, bool& colon) {
+	if (colon) {
+		throw std::runtime_error("Pointer declaration needs size argument!");
+	}
+	char c;
+	size_t r = 0;
+	std::string size_word;
+	for (int i = 0; i < 4; i++) {
+		iss.get(c);
+		size_word += c;
+	}
+	if (size_word != "size") {
+		throw std::runtime_error("Expected 'size' keyword!");
+	}
+
+	bool found = false;
+	do {
+		iss.get(c);
+		found = c == '=';
+	} while (!found && !iss.eof());
+
+	if (!found) {
+		throw std::runtime_error("Missing '=' sign in declaration!");
+	}
+
+	size_word.clear();
+	do {
+		iss.get(c);
+	} while (c == ' ');
+
+	size_word += c;
+	while (iss.get(c)) {
+		if (c == ' ') {
+			break;
+		}
+		if (c == ':') {
+			colon = true;
+			break;
+		}
+		size_word += c;
+	}
+	r = std::stoul(size_word);
+
 	return r;
 }

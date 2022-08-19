@@ -16,6 +16,7 @@ typedef struct {
 	Tag_type type;
 	std::string symbol;
 	std::string tag;
+	size_t ptr_size;
 } tag_struct_t;
 
 

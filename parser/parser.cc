@@ -304,7 +304,7 @@ void print_tags(
 			if (tag_entry.type == Tag_type::PTR) {
 				uint64_t addr = elf_data.get_ptr_addr(elf_symbol.value);
 				if (addr > 0) {
-					out_print_line(out, addr, 1, policy.tag_index(tag_entry.tag));
+					out_print_line(out, addr, tag_entry.ptr_size, policy.tag_index(tag_entry.tag));
 				}
 			}
 			out_print_line(out, elf_symbol.value, elf_symbol.size, policy.tag_index(tag_entry.tag));
