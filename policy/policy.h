@@ -105,6 +105,8 @@ class policy_t {
 			return lca_matrix;
 		}
 
+		void dump(std::ofstream& out);
+
 		std::shared_ptr<topology_basic_t> topology;
 	private:
 		std::map<std::string, std::shared_ptr<topology_t>> topologies;

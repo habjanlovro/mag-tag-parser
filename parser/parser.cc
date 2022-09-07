@@ -18,10 +18,9 @@
 
 const std::string output_file_name = "policy.d2sc";
 
-void print_policy(std::ofstream& out, const policy_t& policy);
 void print_tags(
 		std::ofstream& out,
-		const elf_data_t& elf_data,
+		elf_data_t& elf_data,
 		const tag_data_t& tag_data,
 		const policy_t& policy);
 static inline void out_print_line(std::ofstream& out, const uint64_t addr,
@@ -74,36 +73,32 @@ int main(int argc, char *argv[]) {
 
 	std::ofstream out_file(output_file_name);
 	if (out_file.is_open()) {
-		print_policy(out_file, *policy);
+		policy->dump(out_file);
 		print_tags(out_file, *elf_data, *tag_data, *policy);
 	}
+
+	std::ofstream dup_elf("tags.d2sc", std::ios::out | std::ios::binary);
+	if (dup_elf.is_open()) {
+		elf_data->dump(dup_elf);
+	}
+
 
 	return 0;
 }
 
-void print_policy(std::ofstream& out, const policy_t& policy) {
-	out << policy.topology->size() << std::endl;
-	auto& m = policy.get_lca_matrix();
-	for (size_t i = 0; i < m.size(); i++) {
-		out << policy.topology->get_tag(i);
-		for (size_t j = 0; j < m[i].size(); j++) {
-			out << " " << (int) m[i][j];
-		}
-		out << std::endl;
-	}
-}
-
 void print_tags(
 		std::ofstream& out,
-		const elf_data_t& elf_data,
+		elf_data_t& elf_data,
 		const tag_data_t& tag_data,
 		const policy_t& policy) {
 	for (auto &tag_entry : tag_data.getentries()) {
 		try {
 			elf_symbol_t elf_symbol = elf_data.get_symbol_info(tag_entry.symbol);
+			elf_data.set_tag_data(elf_symbol.value, elf_symbol.size, policy.tag_index(tag_entry.tag));
 			if (tag_entry.type == Tag_type::PTR) {
 				uint64_t addr = elf_data.get_ptr_addr(elf_symbol.value);
 				if (addr > 0) {
+					elf_data.set_tag_data(addr, tag_entry.ptr_size, policy.tag_index(tag_entry.tag));
 					out_print_line(out, addr, tag_entry.ptr_size, policy.tag_index(tag_entry.tag));
 				}
 			}

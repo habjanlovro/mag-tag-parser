@@ -8,6 +8,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
+#include <fstream>
 
 
 static std::map<std::string, std::shared_ptr<topology_t>> get_simple_topologies(const std::shared_ptr<ast_node_t>& ast);
@@ -383,4 +384,15 @@ void topology_basic_t::add_unknown() {
 	}
 	auto unknowns = std::vector<uint8_t>(mvertices.size() + 1, 1);
 	mvertices.emplace(mvertices.begin(), unknowns);
+}
+
+void policy_t::dump(std::ofstream& out) {
+	out << topology->size() << " " << perimiter_guards.size() << std::endl;
+	for (size_t i = 0; i < lca_matrix.size(); i++) {
+		out << topology->get_tag(i);
+		for (size_t j = 0; j < lca_matrix[i].size(); j++) {
+			out << " " << (int) lca_matrix[i][j];
+		}
+		out << std::endl;
+	}
 }

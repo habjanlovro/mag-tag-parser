@@ -7,6 +7,11 @@
 #include <fcntl.h>
 #include <exception>
 #include <algorithm>
+#include <sstream>
+#include <fstream>
+
+#include <sys/types.h>
+#include <sys/stat.h>
 
 
 #define PREAD(fd, buff, size, offset) ({ \
@@ -95,6 +100,27 @@ elf_data_t::elf_data_t(const char *file_name) :
 			free(sym_table);
 		}
 	}
+
+	tbl = (char *) malloc(ehdr.e_phentsize * ehdr.e_phnum);
+	if (!tbl) {
+		close(fd);
+		std::abort();
+	}
+	PREAD(fd, tbl, ehdr.e_phentsize * ehdr.e_phnum, ehdr.e_phoff);
+	for (int i = 0; i < ehdr.e_phnum; i++) {
+		Elf64_Phdr phdr;
+		memcpy(&phdr, tbl + i * sizeof(Elf64_Phdr), sizeof(Elf64_Phdr));
+		phdrs.push_back(phdr);
+	}
+
+	struct stat file_status;
+	if (stat(file_name, &file_status) != 0) {
+		std::ostringstream oss;
+		oss << "Failed to read data from '" << file_name << "'!";
+		close(fd);
+		throw std::runtime_error(oss.str());
+	}
+	data = std::vector<char>(file_status.st_size, 0);
 }
 
 elf_data_t::~elf_data_t() {
@@ -135,4 +161,27 @@ uint64_t elf_data_t::get_ptr_addr(const uint64_t ptr) const {
 	}
 
 	return r;
+}
+
+
+void elf_data_t::set_tag_data(const uint64_t addr, const size_t size, const uint8_t tag_index) {
+	Elf64_Phdr phdr;
+	bool found = false;
+	for (auto &p : phdrs) {
+		if (addr > p.p_vaddr && addr + size < p.p_vaddr + p.p_memsz) {
+			phdr = p;
+			found = true;
+			break;
+		}
+	}
+	if (!found) {
+		throw std::runtime_error("Didn't find data in the ELF file!");
+	}
+
+	uint64_t offset = addr - phdr.p_vaddr;
+	memset(data.data() + phdr.p_offset + offset, tag_index, size);
+}
+
+void elf_data_t::dump(std::ofstream& out) {
+	out.write(data.data(), data.size());
 }
