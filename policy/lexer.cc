@@ -68,6 +68,21 @@ std::vector<symbol_t> lexify(const char *file_path) {
 					<< line << ", " << column;
 				throw std::runtime_error(oss.str());
 			}
+		} else if (c == '"') {
+			std::string s;
+			int start_column = column;
+			while (infile.get(c) && c != '"') {
+				if (c == '\n') {
+					std::ostringstream oss;
+					oss << "String literal does not end before the end of the line! Location: "
+						<< line << "," << column;
+					throw std::runtime_error(oss.str());
+				}
+				column++;
+				s += c;
+			}
+			column++;
+			symbols.push_back({ Term::STRING, s, line, start_column });
 		} else if (is_identifier(c)) {
 			std::string s;
 			int start_column = column;
@@ -91,6 +106,8 @@ std::vector<symbol_t> lexify(const char *file_path) {
 				symbols.push_back({ Term::PG, s, line, start_column });
 			} else if (s == "type") {
 				symbols.push_back({ Term::PG_TYPE, s, line, start_column});
+			} else if (s == "file") {
+				symbols.push_back({ Term::PG_FILE, s, line, start_column});
 			} else {
 				symbols.push_back({ Term::IDENTIFIER, s, line, start_column });
 			}

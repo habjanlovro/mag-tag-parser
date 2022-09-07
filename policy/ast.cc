@@ -117,10 +117,10 @@ std::shared_ptr<ast_node_t> ast_construct(const dertree_t& node, std::shared_ptr
 			return pg;
 		}
 		case Nont::PG_REST: {
-			if (node.leaves.size() <= 6) {
+			if (node.leaves.size() < 6) {
 				return nullptr;
 			}
-			auto pg = std::make_shared<ast_pg_t>(node.leaves.at(2).name, node.leaves.at(4).name);
+			return std::make_shared<ast_pg_t>(node.leaves.at(2).name, node.leaves.at(5).name);
 		}
 		default:
 			throw std::runtime_error("Unknown syntax!");

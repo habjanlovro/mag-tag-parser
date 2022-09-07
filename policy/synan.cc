@@ -142,9 +142,9 @@ static dertree_t parse_edge(std::vector<symbol_t>& symbols) {
 	dertree_t t;
 	t.label = Nont::EDGE;
 
-	add_leaf(t, symbols, Term::IDENTIFIER, "an identifier");
+	add_leaf(t, symbols, Term::STRING, "a tag string");
 	add_leaf(t, symbols, Term::ARROW, "'->'");
-	add_leaf(t, symbols, Term::IDENTIFIER, "an identifier");
+	add_leaf(t, symbols, Term::STRING, "a tag string");
 
 	return t;
 }
@@ -173,7 +173,7 @@ static dertree_t parse_linear(std::vector<symbol_t>& symbols) {
 	dertree_t t;
 	t.label = Nont::LINEAR;
 
-	add_leaf(t, symbols, Term::IDENTIFIER, "an identifier");
+	add_leaf(t, symbols, Term::STRING, "a tag string");
 	t.subtrees.push_back(parse_linear_rest(symbols));
 	return t;
 }
@@ -330,18 +330,33 @@ static dertree_t parse_pg_rest(std::vector<symbol_t>& symbols) {
 	dertree_t t;
 	t.label = Nont::PG_REST;
 
-	add_leaf(t, symbols, Term::PG_TYPE, "'type'");
-	add_leaf(t, symbols, Term::COLON, "':'");
-	add_leaf(t, symbols, Term::IDENTIFIER, "'in' or 'out'");
-	if ((t.leaves.back().name != "in") && (t.leaves.back().name != "out")) {
-		throw std::runtime_error(error_msg(t.leaves.back(), "'in' or 'out'"));
+	auto& s = consume(symbols, "Missing an identifier or a nested expression!");
+	switch (s.term) {
+		case Term::PG_TYPE:
+			t.leaves.push_back(s);
+			add_leaf(t, symbols, Term::COLON, "':'");
+			add_leaf(t, symbols, Term::IDENTIFIER, "'in', 'out' or 'err'");
+			if ((t.leaves.back().name != "in") &&
+					(t.leaves.back().name != "out") &&
+					(t.leaves.back().name != "err")) {
+				throw std::runtime_error(error_msg(t.leaves.back(), "'in', out' or 'err"));
+			}
+			break;
+		case Term::PG_FILE:
+			t.leaves.push_back(s);
+			add_leaf(t, symbols, Term::COLON, "':'");
+			add_leaf(t, symbols, Term::STRING, "a filename");
+			break;
+		default:
+			throw std::runtime_error(error_msg(s, "'type' or 'file' keywords!"));
 	}
+
 	add_leaf(t, symbols, Term::IDENTIFIER, "'tag'");
 	if (t.leaves.back().name != "tag") {
 		throw std::runtime_error(error_msg(t.leaves.back(), "'tag'"));
 	}
 	add_leaf(t, symbols, Term::EQUAL, "'='");
-	add_leaf(t, symbols, Term::IDENTIFIER, "an identifier");
+	add_leaf(t, symbols, Term::STRING, "a string");
 
 	return t;
 }

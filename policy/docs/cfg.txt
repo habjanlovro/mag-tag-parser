@@ -19,12 +19,12 @@ TOPOLOGYREST -> expr  EXPR  .
 
 BASIC -> EDGE EDGEREST .
 
-EDGE -> id arrow id .
+EDGE -> str arrow str .
 
 EDGEREST -> comma EDGE EDGEREST .
 EDGEREST -> .
 
-LIN -> id LINREST .
+LIN -> str LINREST .
 
 LINREST -> comma LIN .
 LINREST -> .
@@ -47,4 +47,5 @@ ELEM -> ( SUM ) .
 
 PG -> pg id { PGREST } .
 
-PGREST -> type : id id = id .
+PGREST -> type : id tag = str .
+PGREST -> file : str tag = str .

@@ -90,6 +90,15 @@ class topology_basic_t : public topology_t {
 		std::map<int, std::string> fromindex;
 };
 
+struct pg_t {
+	std::string name;
+	std::string file;
+	uint8_t tag;
+	int fd;
+	pg_t(const std::string& n, const std::string& f, const uint8_t tag, const int fd)
+		: name(n), file(f), tag(tag), fd(fd) {}
+};
+
 class policy_t {
 	public:
 		policy_t() {}
@@ -112,6 +121,7 @@ class policy_t {
 		std::map<std::string, std::shared_ptr<topology_t>> topologies;
 		std::set<std::string> tags;
 		std::vector<std::vector<uint8_t>> lca_matrix;
+		std::vector<pg_t> perimiter_guards;
 };
 
 

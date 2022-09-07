@@ -22,7 +22,9 @@ enum class Term {
 	TOPOLOGY,
 	PG,
 	PG_TYPE,
+	PG_FILE,
 	IDENTIFIER,
+	STRING,
 	END
 };
 
