@@ -16,4 +16,4 @@ parser_srcs = \
 	tag_parser.cc
 
 parser_install_prog_srcs = \
-	parser.cc
+	tag-parser.cc

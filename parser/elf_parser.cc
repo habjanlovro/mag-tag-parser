@@ -141,7 +141,7 @@ void elf_data_t::print_symbols() {
 elf_symbol_t elf_data_t::get_symbol_info(const std::string& name) const {
 	auto search = symbol_table.find(name);
 	if (search == symbol_table.end()) {
-		throw std::runtime_error("Symbol '" + name + "' dosen't exist in ELF file!");
+		throw std::runtime_error("Symbol '" + name + "' doesn't exist in ELF file!");
 	}
 	return search->second;
 }
