@@ -168,7 +168,7 @@ void elf_data_t::set_tag_data(const uint64_t addr, const size_t size, const uint
 	Elf64_Phdr phdr;
 	bool found = false;
 	for (auto &p : phdrs) {
-		if (addr > p.p_vaddr && addr + size < p.p_vaddr + p.p_memsz) {
+		if (addr >= p.p_vaddr && addr <= p.p_vaddr + p.p_memsz) {
 			phdr = p;
 			found = true;
 			break;
@@ -179,7 +179,10 @@ void elf_data_t::set_tag_data(const uint64_t addr, const size_t size, const uint
 	}
 
 	uint64_t offset = addr - phdr.p_vaddr;
-	memset(data.data() + phdr.p_offset + offset, tag_index, size);
+	size_t actual_size = (addr + size > phdr.p_vaddr + phdr.p_memsz) ?
+		 phdr.p_vaddr + phdr.p_memsz - addr  :
+		size;
+	memset(data.data() + phdr.p_offset + offset, tag_index, actual_size);
 }
 
 void elf_data_t::dump(std::ofstream& out) {
