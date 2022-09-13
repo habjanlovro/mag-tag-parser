@@ -1,0 +1,8 @@
+topology PP : basic {
+	"public" -> "private"
+}
+
+pg output {
+	type : out
+	tag = "PP.public"
+}
