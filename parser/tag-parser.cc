@@ -42,6 +42,11 @@ int main(int argc, char *argv[]) {
 		policy = std::make_unique<policy_t>(argv[3]);
 		auto& matrix = policy->topology->matrix();
 		auto lca_matrix = compute_lca(matrix);
+		if (lca_matrix.size() > 256) {
+			std::cerr << "The policy is too big: " << lca_matrix.size()
+				<< " tags found, but there are only 256 available!" << std::endl;
+			exit(1);
+		}
 		policy->set_lca_matrix(lca_matrix);
 	} catch (std::runtime_error& err) {
 		std::cerr << err.what() << std::endl;
