@@ -39,3 +39,9 @@ autom4te.cache/
 .vscode/
 
 *~
+
+# Test file outputs
+*.in
+*.out
+*.time
+*.d2sc

@@ -1,0 +1,10 @@
+topology PP : linear
+	"public", "private"
+
+topology Confidentiality : linear
+    "public", "confidential", "secret", "topsecret"
+
+pg out {
+	type : out
+	tag = "PP.public"
+}

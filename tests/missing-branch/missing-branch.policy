@@ -1,0 +1,7 @@
+topology PP : linear
+	"public", "private"
+
+pg out {
+	type : out
+	tag = "PP.public"
+}
