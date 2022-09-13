@@ -16,6 +16,7 @@ typedef struct {
 	uint16_t section_index;
 	uint64_t value;
 	uint64_t size;
+	bool is_initialized;
 } elf_symbol_t;
 
 typedef struct {
