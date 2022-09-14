@@ -5,6 +5,6 @@ topology Confidentiality : linear
     "public", "confidential", "secret", "topsecret"
 
 pg out {
-	type : out
+	file : "stdout"
 	tag = "PP.public"
 }

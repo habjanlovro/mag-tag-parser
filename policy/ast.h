@@ -51,24 +51,15 @@ class ast_topology_t : public ast_decl_t {
 
 class ast_pg_t : public ast_decl_t {
 	public:
-		ast_pg_t(const std::string& type, const std::string& t) : fd(-1), tag(t) {
-			if (type == "in") {
-				fd = 0;
-			} else if (type == "out") {
-				fd = 1;
-			} else if (type == "err") {
-				fd = 2;
-			} else {
-				file = type;
-			}
-		}
+		ast_pg_t(const std::string& file, const std::string& tag) :
+			tag(tag), file(file) {}
 		~ast_pg_t() {}
 
 		void set_name(const std::string& n) {
 			name = n;
 		}
 		void print() {
-			std::cout << name << ": " << fd << " -> " << tag << std::endl;
+			std::cout << name << ": " << file << " -> " << tag << std::endl;
 		}
 
 		std::string get_name() {
@@ -79,16 +70,11 @@ class ast_pg_t : public ast_decl_t {
 			return tag;
 		}
 
-		int get_fd() {
-			return fd;
-		}
-
 		std::string get_file() {
 			return file;
 		}
 	private:
 		std::string name;
-		int fd;
 		std::string tag;
 		std::string file;
 };

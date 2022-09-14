@@ -47,5 +47,4 @@ ELEM -> ( SUM ) .
 
 PG -> pg id { PGREST } .
 
-PGREST -> type : id tag = str .
 PGREST -> file : str tag = str .

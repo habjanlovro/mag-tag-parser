@@ -104,8 +104,6 @@ std::vector<symbol_t> lexify(const char *file_path) {
 				symbols.push_back({ Term::TOPOLOGY, s, line, start_column });
 			} else if (s == "pg") {
 				symbols.push_back({ Term::PG, s, line, start_column });
-			} else if (s == "type") {
-				symbols.push_back({ Term::PG_TYPE, s, line, start_column});
 			} else if (s == "file") {
 				symbols.push_back({ Term::PG_FILE, s, line, start_column});
 			} else {

@@ -330,27 +330,9 @@ static dertree_t parse_pg_rest(std::vector<symbol_t>& symbols) {
 	dertree_t t;
 	t.label = Nont::PG_REST;
 
-	auto& s = consume(symbols, "Missing an identifier or a nested expression!");
-	switch (s.term) {
-		case Term::PG_TYPE:
-			t.leaves.push_back(s);
-			add_leaf(t, symbols, Term::COLON, "':'");
-			add_leaf(t, symbols, Term::IDENTIFIER, "'in', 'out' or 'err'");
-			if ((t.leaves.back().name != "in") &&
-					(t.leaves.back().name != "out") &&
-					(t.leaves.back().name != "err")) {
-				throw std::runtime_error(error_msg(t.leaves.back(), "'in', out' or 'err"));
-			}
-			break;
-		case Term::PG_FILE:
-			t.leaves.push_back(s);
-			add_leaf(t, symbols, Term::COLON, "':'");
-			add_leaf(t, symbols, Term::STRING, "a filename");
-			break;
-		default:
-			throw std::runtime_error(error_msg(s, "'type' or 'file' keywords!"));
-	}
-
+	add_leaf(t, symbols, Term::PG_FILE, "keyword 'file'");
+	add_leaf(t, symbols, Term::COLON, "':'");
+	add_leaf(t, symbols, Term::STRING, "a string containig \"filename\" or [\"stdin\"|\"stdout\"|\"stderr\"]");
 	add_leaf(t, symbols, Term::IDENTIFIER, "'tag'");
 	if (t.leaves.back().name != "tag") {
 		throw std::runtime_error(error_msg(t.leaves.back(), "'tag'"));

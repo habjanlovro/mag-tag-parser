@@ -94,9 +94,8 @@ struct pg_t {
 	std::string name;
 	std::string file;
 	uint8_t tag;
-	int fd;
-	pg_t(const std::string& n, const std::string& f, const uint8_t tag, const int fd)
-		: name(n), file(f), tag(tag), fd(fd) {}
+	pg_t(const std::string& n, const std::string& f, const uint8_t tag)
+		: name(n), file(f), tag(tag) {}
 };
 
 class policy_t {

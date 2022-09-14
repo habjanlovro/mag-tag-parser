@@ -3,6 +3,6 @@ topology PP : basic {
 }
 
 pg output {
-	type : out
+	file : "stdout"
 	tag = "PP.public"
 }

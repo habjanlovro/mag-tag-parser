@@ -7,6 +7,6 @@ pg in {
 }
 
 pg out {
-	type : out
+	file : "stdout"
 	tag = "PP.public"
 }

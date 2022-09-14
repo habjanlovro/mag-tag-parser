@@ -21,7 +21,6 @@ enum class Term {
 	EXPR,
 	TOPOLOGY,
 	PG,
-	PG_TYPE,
 	PG_FILE,
 	IDENTIFIER,
 	STRING,

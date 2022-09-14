@@ -166,7 +166,7 @@ static std::vector<pg_t> get_pgs(const std::shared_ptr<ast_node_t>& ast,
 			if (auto t = std::dynamic_pointer_cast<ast_pg_t>(decl)) {
 				try {
 					auto tag = topology.get_index(t->get_tag());
-					pg_t pg(t->get_name(), t->get_file(), tag, t->get_fd());
+					pg_t pg(t->get_name(), t->get_file(), tag);
 					perimiter_guards.push_back(pg);
 				} catch (std::out_of_range& e) {
 					std::ostringstream oss;
@@ -425,11 +425,6 @@ void policy_t::dump(std::ofstream& out) {
 	}
 
 	for (auto& pg : perimiter_guards) {
-		if (pg.fd < 0) {
-			out << pg.name << " " << pg.file << " " << (int) pg.tag << std::endl;
-		} else {
-			out << pg.name << " " << pg.fd << " " << (int) pg.tag << std::endl;
-		}
-
+		out << pg.name << " \"" << pg.file << "\" " << (int) pg.tag << std::endl;
 	}
 }
