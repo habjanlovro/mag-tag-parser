@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 
 
 static Tag_type get_type(std::istringstream& iss);
@@ -106,22 +107,17 @@ static std::string get_tag(std::istringstream& iss, bool colon) {
 
 	do {
 		iss.get(c);
-	} while (c == ' ' && !iss.eof());
-	do {
+	} while (c != '"' && !iss.eof());
+	while(iss.get(c) && c != '"') {
 		r += c;
-		iss.get(c);
-	} while (!iss.eof());
-
-	std::string::iterator string_end;
-	for (auto p = r.begin(); p != r.end(); p++) {
-		if (*p != ' ') {
-			string_end = p;
-		}
 	}
-	if (string_end != r.end()) {
-		string_end++;
+	if (c != '"') {
+		throw std::runtime_error("Missing end of tag declaration '\"'!");
 	}
-	r.erase(string_end, r.end());
+	r.erase(std::remove_if(r.begin(), r.end(), isspace), r.end());
+	if (r.size() == 0) {
+		throw std::runtime_error("Missing tag in declaration!");
+	}
 	return r;
 }
 

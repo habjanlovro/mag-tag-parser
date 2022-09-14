@@ -1,2 +1,2 @@
-atom a : PP.private
-atom b : PP.public
+atom a : "PP.private"
+atom b : "PP.public"

@@ -1,1 +1,1 @@
-ptr s size = 1 : PP.private
+ptr s size = 1 : "PP.private"

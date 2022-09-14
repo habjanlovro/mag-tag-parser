@@ -5,14 +5,22 @@ function run_test {
 	cd "$name"
 	if "$RISCV/bin/riscv64-unknown-elf-gcc" "$name.c" -o "$name" &>/dev/null; then
 		if "$RISCV/bin/tag-parser" "$name" "$name.tags" "$name.policy" &>/dev/null; then
-			"$RISCV/bin/spike-tag" "--tag-files=policy.d2sc,tags.d2sc" "pk" "$name" >"$name-tags.out" 2>"$name-tags.time" < "args.in"
-			"$RISCV/bin/spike" "pk" "$name" >"$name.out" 2>"$name.time" < "args.in"
-			echo -e "\tSuccess"
+			if "$RISCV/bin/spike-tag" "--tag-files=policy.d2sc,tags.d2sc" "pk" "$name" >"$name-tags.out" 2>"$name-tags.time" < "args.in"; then
+				echo -n -e "\tTag run Success"
+			else
+				echo -n -e "\tTag run Failed"
+			fi
+
+			if "$RISCV/bin/spike" "pk" "$name" >"$name.out" 2>"$name.time" < "args.in"; then
+				echo -e "\tSpike run Success"
+			else
+				echo -e "\tSpike run Fail"
+			fi
 		else
-			echo "Failed to run tag-praser for case $name"
+			echo -e "\tFailed to run tag-praser for case $name"
 		fi
 	else
-		echo "Failed to run test case $name!"
+		echo -e "\tFailed to run test case $name!"
 	fi
 	cd ".."
 }
