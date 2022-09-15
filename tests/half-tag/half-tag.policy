@@ -1,0 +1,7 @@
+topology PP : linear
+	"public", "private"
+
+pg out {
+	file : "stdout"
+	tag = "PP.public"
+}
