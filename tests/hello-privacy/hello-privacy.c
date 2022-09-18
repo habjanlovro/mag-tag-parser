@@ -1,9 +1,8 @@
-#include <stdio.h>
+#include <unistd.h>
 
-char *s = "Hello, privacy!";
-int outside = 0;
+char *s = "Hello, privacy!\n";
 
 int main() {
-	printf("%s\n", s);
+	write(1, s, 16);
 	return 0;
 }
