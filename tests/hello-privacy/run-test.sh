@@ -58,5 +58,5 @@ function run-test {
 	cd ..
 }
 
-run-test "1st-run" "hello-privacy"
-run-test "2nd-run" "hello-privacy"
+run-test "string-public" "hello-privacy"
+run-test "string-private" "hello-privacy"

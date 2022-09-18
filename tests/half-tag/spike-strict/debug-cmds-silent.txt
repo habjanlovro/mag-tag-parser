@@ -1,0 +1,19 @@
+until pc 0 0x00000000000100c0
+pc 0
+reg 0
+mem 0 0x12f18
+mem 0 0x12f20
+until pc 0 0x0000000000010f68
+pc 0
+reg 0
+mem 0 0x12f18
+mem 0 0x12f20
+until pc 0 0x0000000000010eec
+pc 0
+reg 0
+mem 0 0x12f18
+mem 0 0x12f20
+until pc 0 0xffffffc0000038f2
+pc 0
+reg 0
+rs

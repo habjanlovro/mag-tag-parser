@@ -3,5 +3,5 @@ topology PP : linear
 
 pg out {
 	file : "stdout"
-	tag = "PP.public"
+	tag = "PP.private"
 }

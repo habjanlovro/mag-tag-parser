@@ -12,9 +12,9 @@ perimiter guard at work. There are two versions of the test.
 Both versions contain the execution trace, state of the registers and
 state of memory where the string is stored.
 
-The state is recorded before the call to system call `write` and
-before the call to system call `exit`, as in this time we can read the
-memory from the simulator.
+The state is recorded before the `write` system call and before the
+`exit` system call, as in this time we can read the memory from the
+simulator.
 
 ## Results
 
