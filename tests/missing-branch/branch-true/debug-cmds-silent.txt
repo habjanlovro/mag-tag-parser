@@ -1,0 +1,27 @@
+until pc 0 000000000001014c
+pc 0
+reg 0
+r 4
+pc 0
+reg 0
+r 1
+pc 0
+reg 0
+r 3
+pc 0
+reg 0
+r 1
+pc 0
+reg 0
+r 1
+pc 0
+reg 0
+r 3
+pc 0
+reg 0
+mem 0 0x1f2dc
+r 1
+pc 0
+reg 0
+mem 0 0x1f2dc
+rs
