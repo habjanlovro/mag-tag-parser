@@ -1,0 +1,41 @@
+untiln pc 0 0x1014c
+r 4
+pc 0
+fregs 0 fa4
+r 1
+pc 0
+fregs 0 fa4
+r 1
+pc 0
+fregs 0 fa5
+r 1
+pc 0
+fregs 0 fa5
+r 1
+freg 0 fa5
+mem 0 0x3ffffffb3c
+r 1
+fregd 0 fa5
+r 1
+fregs 0 fa5
+r 1
+fregs 0 fa4
+r 1
+fregs 0 fa5
+r 1
+freg 0 fa5
+mem 0 0x3ffffffb3c
+r 1
+fregs 0 fa5
+r 1
+fregs 0 fa4
+r 1
+fregs 0 fa5
+r 1
+freg 0 fa5
+mem 0 0x3ffffffb3c
+untiln pc 0 0x000000000001039e
+mem 0 0x1f338
+mem 0 0x1f340
+mem 0 0x1f348
+r
