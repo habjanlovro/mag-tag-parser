@@ -120,7 +120,7 @@ class policy_t {
 		std::map<std::string, std::shared_ptr<topology_t>> topologies;
 		std::set<std::string> tags;
 		std::vector<std::vector<uint8_t>> lca_matrix;
-		std::vector<pg_t> perimiter_guards;
+		std::vector<pg_t> perimeter_guards;
 };
 
 

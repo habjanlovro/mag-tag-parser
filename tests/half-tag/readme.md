@@ -13,7 +13,7 @@ test:
 
 The program modifies a 'public' string with some 'public', 'private'
 and 'unknown' data. Then it prints the string on standard output that
-is guarded by perimiter guard permitting tag 'private'.
+is guarded by perimeter guard permitting tag 'private'.
 
 The state of the system is recorded at the beginning of main, before
 the `write` system call and before the `exit` system call.

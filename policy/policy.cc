@@ -56,7 +56,7 @@ policy_t::policy_t(const char *file_path) {
 	tags.insert("unknown");
 	topology->add_unknown();
 
-	perimiter_guards = get_pgs(ast, *topology);
+	perimeter_guards = get_pgs(ast, *topology);
 }
 
 static std::map<std::string, std::shared_ptr<topology_t>> get_simple_topologies(const std::shared_ptr<ast_node_t>& ast) {
@@ -160,24 +160,24 @@ static std::shared_ptr<topology_basic_t> construct_expr_topology(
 
 static std::vector<pg_t> get_pgs(const std::shared_ptr<ast_node_t>& ast,
 		const topology_basic_t& topology) {
-	std::vector<pg_t> perimiter_guards;
+	std::vector<pg_t> perimeter_guards;
 	if (auto source = std::dynamic_pointer_cast<ast_source_t>(ast)) {
 		for (auto& decl : source->get_decls()) {
 			if (auto t = std::dynamic_pointer_cast<ast_pg_t>(decl)) {
 				try {
 					auto tag = topology.get_index(t->get_tag());
 					pg_t pg(t->get_name(), t->get_file(), tag);
-					perimiter_guards.push_back(pg);
+					perimeter_guards.push_back(pg);
 				} catch (std::out_of_range& e) {
 					std::ostringstream oss;
-					oss << "Unknown tag for perimiter guard '" << t->get_name()
+					oss << "Unknown tag for perimeter guard '" << t->get_name()
 						<< "': '"<< t->get_tag() << "'!";
 					throw std::runtime_error(oss.str());
 				}
 			}
 		}
 	}
-	return perimiter_guards;
+	return perimeter_guards;
 }
 
 topology_basic_t::topology_basic_t(const std::string& n) {
@@ -415,7 +415,7 @@ void topology_basic_t::add_unknown() {
 }
 
 void policy_t::dump(std::ofstream& out) {
-	out << topology->size() << " " << perimiter_guards.size() << std::endl;
+	out << topology->size() << " " << perimeter_guards.size() << std::endl;
 	for (size_t i = 0; i < lca_matrix.size(); i++) {
 		out << topology->get_tag(i);
 		for (size_t j = 0; j < lca_matrix[i].size(); j++) {
@@ -424,7 +424,7 @@ void policy_t::dump(std::ofstream& out) {
 		out << std::endl;
 	}
 
-	for (auto& pg : perimiter_guards) {
+	for (auto& pg : perimeter_guards) {
 		out << pg.name << " \"" << pg.file << "\" " << (int) pg.tag << std::endl;
 	}
 }

@@ -52,9 +52,9 @@ ptr <symbol-name> size = <integer> : "<tag>"
 
 ### Policy file
 
-The policy file contains descriptions of topologies and perimiter
+The policy file contains descriptions of topologies and perimeter
 guards. Topologies describe the tags and their relations, while the
-perimiter guards describe how the policy interacts with the data
+perimeter guards describe how the policy interacts with the data
 coming in and going out of the system.
 
 #### Topologies
@@ -98,12 +98,12 @@ The names of the combined tags will be of the following form:
 `<name>.(<topology-a>.<tag-name>,<topology-b>.<tag-name>)` or
 `<name>.<topology-c>.<tag-name>`.
 
-#### Perimiter guards
+#### Perimeter guards
 
-The perimiter guards describe how the data coming in will be tagged
+The perimeter guards describe how the data coming in will be tagged
 and which data going out will be passed.
 
-The perimiter guard can be associated with a standard file descriptor
+The perimeter guard can be associated with a standard file descriptor
 or it can be associated with a file. Example of definition for
 standard file descriptor:
 
@@ -128,7 +128,7 @@ pg <name> {
 The program outputs two files:
 
 * The policy file contains the policy description - the resulting
-  graph and the perimiter guard definitions.
+  graph and the perimeter guard definitions.
 * The tag file is an ELF duplicate of the input ELF file. It contains
   the tag data of the variables.
 
