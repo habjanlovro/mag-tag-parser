@@ -1,0 +1,4 @@
+atom a : "Together.(PP.public,Confidentiality.public)"
+atom b : "Together.(PP.private,Confidentiality.secret)"
+atom c : "Together.(PP.private, Confidentiality.confidential)"
+atom d : "Together.(PP.public, Confidentiality.confidential)"

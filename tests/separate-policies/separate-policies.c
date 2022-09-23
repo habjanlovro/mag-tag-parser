@@ -3,14 +3,14 @@
 int a = 5;
 int b = 6;
 int c = 19;
-
+int d = 13;
 
 int main() {
-	c = a + b;
+	int x = a + b;
+	int y = c + d;
 
-	printf("%d\n", a);
-	printf("%d\n", b);
-	printf("%d\n", c);
+	printf("%d\n", x);
+	printf("%d\n", y);
 
 	return 0;
 }

@@ -1,0 +1,4 @@
+atom a : "PP.public"
+atom b : "Confidentiality.secret"
+atom c : "PP.private"
+atom d : "Confidentiality.confidential"

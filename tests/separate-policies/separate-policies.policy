@@ -4,6 +4,9 @@ topology PP : linear
 topology Confidentiality : linear
     "public", "confidential", "secret", "topsecret"
 
+topology Together : expr
+	PP * Confidentiality
+
 pg out {
 	file : "stdout"
 	tag = "PP.public"
