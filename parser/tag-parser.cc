@@ -97,9 +97,8 @@ void print_tags(
 		const tag_data_t& tag_data,
 		const policy_t& policy) {
 	for (auto &tag_entry : tag_data.getentries()) {
-		elf_symbol_t elf_symbol;
 		try {
-			elf_symbol = elf_data.get_symbol_info(tag_entry.symbol);
+			elf_symbol_t elf_symbol = elf_data.get_symbol_info(tag_entry.symbol);
 			if (!elf_symbol.is_initialized) {
 				std::cerr << "Symbol '" << elf_symbol.name
 					<< "' is not initialized, therefore it cannot be tagged!"
@@ -116,7 +115,7 @@ void print_tags(
 			}
 			out_print_line(out, elf_symbol.value, elf_symbol.size, policy.tag_index(tag_entry.tag));
 		} catch (std::runtime_error& e) {
-			std::cerr << "Couldn't locate symbol '" << elf_symbol.name
+			std::cerr << "Couldn't locate symbol '" <<  tag_entry.symbol
 				<< "' in the ELF file!" << std::endl;
 		}
 	}
