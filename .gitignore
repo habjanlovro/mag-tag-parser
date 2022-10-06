@@ -45,3 +45,8 @@ autom4te.cache/
 *.out
 *.time
 *.d2sc
+
+!time.out
+!time-no-tags.out
+!time-tags.out
+!measurements.out
