@@ -1,0 +1,16 @@
+until pc 0 0x10150
+pc 0
+reg 0
+mem 0 0x25210
+mem 0 0x26478
+until pc 0 0x00000000000214b4
+pc 0
+reg 0
+mem 0 0x25210
+mem 0 0x26478
+until mem 0 0x26478 0x3837363534333231
+pc 0
+reg 0
+mem 0 0x25210
+mem 0 0x26478
+rs

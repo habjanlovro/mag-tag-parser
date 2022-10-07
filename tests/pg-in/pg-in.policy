@@ -2,7 +2,7 @@ topology PP : linear
 	"public", "private"
 
 pg in {
-	type : in
+	file : "stdin"
 	tag = "PP.private"
 }
 
