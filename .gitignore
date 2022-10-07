@@ -50,3 +50,4 @@ autom4te.cache/
 !time-no-tags.out
 !time-tags.out
 !measurements.out
+!args.in
