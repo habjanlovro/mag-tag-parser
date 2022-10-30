@@ -44,7 +44,7 @@ autom4te.cache/
 *.in
 *.out
 *.time
-*.d2sc
+*.mtag
 
 !time.out
 !time-no-tags.out

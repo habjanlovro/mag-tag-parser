@@ -37,11 +37,11 @@ function run-test {
 		>no-tags/out-silent.txt 2>no-tags/execution-silent.txt
 
 	# Run with tag propagation
-	spike-tag --tag-files=policy.d2sc,tags.d2sc -d --debug-cmd=debug-cmds.txt \
+	spike-tag --tag-files=policy.mtag,tags.mtag -d --debug-cmd=debug-cmds.txt \
 		pk "$name" \
 		<args.in \
 		>tags/out.txt 2>tags/execution.txt
-	spike-tag --tag-files=policy.d2sc,tags.d2sc -d --debug-cmd=debug-cmds-silent.txt \
+	spike-tag --tag-files=policy.mtag,tags.mtag -d --debug-cmd=debug-cmds-silent.txt \
 		pk "$name" \
 		<args.in \
 		>tags/out-silent.txt 2>tags/execution-silent.txt

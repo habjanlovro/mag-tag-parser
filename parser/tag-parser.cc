@@ -16,7 +16,8 @@
 #include "policy.h"
 #include "lca.h"
 
-const std::string output_file_name = "policy.d2sc";
+const std::string policy_output_file_name = "policy.mtag";
+const std::string tags_output_file_name = "tags.mtag";
 
 void print_tags(
 		std::ofstream& out,
@@ -76,13 +77,13 @@ int main(int argc, char *argv[]) {
 		exit(1);
 	}
 
-	std::ofstream out_file(output_file_name);
+	std::ofstream out_file(policy_output_file_name);
 	if (out_file.is_open()) {
 		policy->dump(out_file);
 		print_tags(out_file, *elf_data, *tag_data, *policy);
 	}
 
-	std::ofstream dup_elf("tags.d2sc", std::ios::out | std::ios::binary);
+	std::ofstream dup_elf(tags_output_file_name, std::ios::out | std::ios::binary);
 	if (dup_elf.is_open()) {
 		elf_data->dump(dup_elf);
 	}

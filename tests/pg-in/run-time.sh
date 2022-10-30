@@ -44,7 +44,7 @@ function run-time {
 
 		spike-tag pk "$name" &>/dev/null <args.in
 
-		spike-tag --tag-files=policy.d2sc,tags.d2sc pk "$name" &>/dev/null <args.in
+		spike-tag --tag-files=policy.mtag,tags.mtag pk "$name" &>/dev/null <args.in
 	done
 
 	python time-calc.py time.out time-no-tags.out time-tags.out "$name:$directory"
