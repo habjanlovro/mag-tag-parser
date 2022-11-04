@@ -64,15 +64,10 @@ elf_data_t::elf_data_t(const char *file_name) :
 	}
 	PREAD(fd, tbl, str_shdr.sh_size, str_shdr.sh_offset);
 
-	int bss_index = -1;
-
 	for (size_t i = 0; i < ehdr.e_shnum; i++) {
 		Elf64_Shdr shdr;
 		PREAD(fd, &shdr, ehdr.e_shentsize, ehdr.e_ehsize + ehdr.e_shoff + i * ehdr.e_shentsize);
 		elf_shdr_t eshdr = { std::string(tbl + shdr.sh_name), shdr };
-		if (shdr.sh_type == SHT_NOBITS) {
-			bss_index = i;
-		}
 		section_hdrs.push_back(eshdr);
 	}
 	free(tbl);
@@ -94,11 +89,10 @@ elf_data_t::elf_data_t(const char *file_name) :
 			int entries = eshdr.shdr.sh_size / sizeof(Elf64_Sym);
 			for (int i = 0; i < entries; i++) {
 				std::string name(str_table + sym_table[i].st_name);
-				bool is_initialized = sym_table[i].st_shndx != bss_index;
 				elf_symbol_t symbol = {name, ELF64_ST_TYPE(sym_table[i].st_info),
 					ELF64_ST_BIND(sym_table[i].st_info), sym_table[i].st_other,
 					sym_table[i].st_shndx, sym_table[i].st_value,
-					sym_table[i].st_size, is_initialized};
+					sym_table[i].st_size};
 				symbol_table[name] = symbol;
 			}
 
@@ -174,7 +168,7 @@ void elf_data_t::set_tag_data(const uint64_t addr, const size_t size, const uint
 	Elf64_Phdr phdr;
 	bool found = false;
 	for (auto &p : phdrs) {
-		if (addr >= p.p_vaddr && addr <= p.p_vaddr + p.p_filesz) {
+		if (addr >= p.p_vaddr && addr + size <= p.p_vaddr + p.p_filesz) {
 			phdr = p;
 			found = true;
 			break;

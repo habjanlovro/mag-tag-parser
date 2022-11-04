@@ -100,12 +100,6 @@ void print_tags(
 	for (auto &tag_entry : tag_data.getentries()) {
 		try {
 			elf_symbol_t elf_symbol = elf_data.get_symbol_info(tag_entry.symbol);
-			if (!elf_symbol.is_initialized) {
-				std::cerr << "Symbol '" << elf_symbol.name
-					<< "' is not initialized, therefore it cannot be tagged!"
-					<< std::endl;
-				continue;
-			}
 			elf_data.set_tag_data(elf_symbol.value, elf_symbol.size, policy.tag_index(tag_entry.tag));
 			if (tag_entry.type == Tag_type::PTR) {
 				uint64_t addr = elf_data.get_ptr_addr(elf_symbol.value);
