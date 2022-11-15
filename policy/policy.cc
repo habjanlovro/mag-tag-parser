@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <algorithm>
 #include <fstream>
+#include <list>
 
 
 static std::map<std::string, std::shared_ptr<topology_t>> get_simple_topologies(const std::shared_ptr<ast_node_t>& ast);
@@ -24,6 +25,15 @@ static std::vector<pg_t> get_pgs(const std::shared_ptr<ast_node_t>& ast,
 	const topology_basic_t& topology);
 
 static inline std::string remove_space(const std::string& s);
+
+static void topological_sort_dfs(
+		const std::vector<std::vector<uint8_t>>& m,
+		const int index,
+		std::vector<bool>& discovered,
+		std::vector<int>& end_time,
+		int& time,
+		std::list<int>& topological_order);
+static std::list<int> topological_ordering(const std::vector<std::vector<uint8_t>>& m);
 
 
 policy_t::policy_t(const char *file_path) {
@@ -55,6 +65,9 @@ policy_t::policy_t(const char *file_path) {
 
 	tags.insert("unknown");
 	topology->add_unknown();
+
+	// check DAG
+	topological_ordering(topology->matrix());
 
 	perimeter_guards = get_pgs(ast, *topology);
 }
@@ -427,4 +440,48 @@ void policy_t::dump(std::ofstream& out) {
 	for (auto& pg : perimeter_guards) {
 		out << pg.name << " \"" << pg.file << "\" " << (int) pg.tag << std::endl;
 	}
+}
+
+
+
+static void topological_sort_dfs(
+		const std::vector<std::vector<uint8_t>>& m,
+		const int index,
+		std::vector<bool>& discovered,
+		std::vector<int>& end_time,
+		int& time,
+		std::list<int>& topological_order) {
+	discovered[index] = true;
+	for (size_t j = 0; j < m[index].size(); j++) {
+		if (m[index][j] > 0 && !discovered[j]) {
+			topological_sort_dfs(m, j, discovered, end_time, time, topological_order);
+		}
+	}
+	end_time[index] = time;
+	topological_order.push_front(index);
+	time++;
+}
+
+static std::list<int> topological_ordering(const std::vector<std::vector<uint8_t>>& m) {
+	std::vector<bool> discovered(m.size());
+	std::vector<int> end_time(m.size());
+	int time = 0;
+	std::list<int> topological_order;
+
+	for (size_t i = 0; i < m.size(); i++) {
+		if (!discovered[i]) {
+			topological_sort_dfs(m, i, discovered, end_time, time, topological_order);
+		}
+	}
+
+	for (size_t i = 0; i < m.size(); i++) {
+		for (size_t j = 0; j < m.size(); j++) {
+			if (i != j && m[i][j] > 0 && end_time[i] <= end_time[j]) {
+				std::ostringstream oss;
+				oss << "The policy is not a directed acyclical graph!";// <<
+				throw std::runtime_error(oss.str());
+			}
+		}
+	}
+	return topological_order;
 }
